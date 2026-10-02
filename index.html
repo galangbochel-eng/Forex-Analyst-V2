@@ -8,10 +8,7 @@
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0a0a;
-            color: #e0e0e0;
-            min-height: 100vh;
-            padding: 16px;
+            background: #0a0a0a; color: #e0e0e0; min-height: 100vh; padding: 16px;
         }
         .container { max-width: 900px; margin: 0 auto; }
         h1 { font-size: 24px; font-weight: 300; margin-bottom: 4px; color: #fff; }
@@ -110,9 +107,7 @@
         .level-item.pp .level-value { color: #8888ff; }
 
         .news-list { max-height: 400px; overflow-y: auto; }
-        .news-item {
-            padding: 10px 0; border-bottom: 1px solid #1a1a1a;
-        }
+        .news-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
         .news-item:last-child { border-bottom: none; }
         .news-title { font-size: 12px; color: #ccc; margin-bottom: 4px; line-height: 1.4; }
         .news-meta {
@@ -175,16 +170,14 @@
         }
         .manual-input input:focus { outline: none; border-color: #4488ff; }
         .manual-input label {
-            font-size: 11px; color: #888; display: block;
-            margin-bottom: 4px;
+            font-size: 11px; color: #888; display: block; margin-bottom: 4px;
         }
-        .hidden { display: none; }
     </style>
 </head>
 <body>
     <div class="container">
         <h1>XAUUSD Market Analyst</h1>
-        <p class="subtitle">Live Price · Entry Level · SL · TP · News</p>
+        <p class="subtitle">Live Price · Entry Level · SL · TP</p>
 
         <div class="mode-toggle">
             <button class="mode-btn active" data-mode="technical">Technical Only</button>
@@ -247,7 +240,6 @@
                 <span class="price-value" id="priceSource" style="font-size:11px;color:#555;">—</span>
             </div>
 
-            <!-- Manual input fallback -->
             <div class="manual-input" id="manualInput">
                 <label>Harga manual (kalau auto-fetch gagal)</label>
                 <input type="number" id="manualPrice" placeholder="Contoh: 4019.30" step="0.01">
@@ -286,11 +278,11 @@
         <div class="card" id="newsCard">
             <div class="card-title">Berita Relevan XAUUSD</div>
             <div id="newsContainer" class="news-list">
-                <div style="text-align:center;color:#666;padding:20px;">Memuat berita...</div>
+                <div style="text-align:center;color:#666;padding:20px;">Klik "Technical + News" untuk load berita</div>
             </div>
         </div>
 
-        <button id="refreshBtn" class="btn" onclick="runAnalysis()" disabled>Refresh Analisis</button>
+        <button id="refreshBtn" class="btn" onclick="runAnalysis()">Refresh Analisis</button>
 
         <p class="disclaimer">
             Analisis otomatis. Bukan saran keuangan. Selalu riset sendiri.
@@ -305,16 +297,11 @@
         let prevHigh = null;
         let prevLow = null;
         let currentMode = 'technical';
-        let newsResult = null;
-
-        // ===== CORS PROXY =====
-        const CORS_PROXY = 'https://api.allorigins.win/raw?url=';
 
         // ===== FETCH WITH TIMEOUT =====
         async function fetchWithTimeout(url, timeout = 5000) {
             const controller = new AbortController();
             const timer = setTimeout(() => controller.abort(), timeout);
-
             try {
                 const response = await fetch(url, { signal: controller.signal });
                 clearTimeout(timer);
@@ -328,62 +315,69 @@
         // ===== FETCH PRICE =====
         async function fetchPrice() {
             const statusEl = document.getElementById('modelStatus');
-            const sourceEl = document.getElementById('priceSource');
-
             statusEl.innerHTML = '<span class="loading-spinner"></span>Fetch harga...';
+            statusEl.className = 'model-status loading';
 
-            // Coba goldprice.org via CORS proxy
+            // API 1: gold-api.com (CORS open)
             try {
-                const url = 'https://data-asg.goldprice.org/dbXRates/USD';
-                const response = await fetchWithTimeout(CORS_PROXY + encodeURIComponent(url), 8000);
-
+                const response = await fetchWithTimeout('https://api.gold-api.com/price/XAU', 5000);
                 if (response.ok) {
                     const data = await response.json();
-
-                    if (data.items && data.items[0]) {
-                        const item = data.items[0];
-                        const price = item.xauPrice;
-                        const change = item.chgXau || 0;
-                        const changePct = item.pcXau || 0;
-
-                        applyPrice(price, change, changePct, 'goldprice.org');
-                        statusEl.textContent = '✓ Harga dari goldprice.org';
+                    const price = data.price || data.ask;
+                    if (price) {
+                        // gold-api nggak kasih change 24h, jadi kita pakai 0
+                        // atau kita derive dari prevClose simulasi
+                        applyPrice(price, 0, 0, 'gold-api.com');
+                        statusEl.textContent = '✓ Harga dari gold-api.com';
                         statusEl.className = 'model-status ready';
                         return true;
                     }
                 }
             } catch (e) {
-                console.warn('goldprice.org failed:', e.message);
+                console.warn('gold-api.com failed:', e.message);
             }
 
-            // Fallback: coba xaus.com via CORS proxy
+            // API 2: metals.live
             try {
-                const url = 'https://xaus.com/api/v1/spot';
-                const response = await fetchWithTimeout(CORS_PROXY + encodeURIComponent(url), 8000);
-
+                const response = await fetchWithTimeout('https://api.metals.live/v1/spot/gold', 5000);
                 if (response.ok) {
                     const data = await response.json();
-                    const price = data.price || data.data?.price;
-
+                    let price = null;
+                    if (Array.isArray(data) && data[0] && data[0].gold) price = data[0].gold;
+                    else if (data.price) price = data.price;
                     if (price) {
-                        const change = data.change_24h || data.data?.change_24h || 0;
-                        const changePct = data.change_percent_24h || data.data?.change_percent_24h || 0;
-
-                        applyPrice(price, change, changePct, 'xaus.com');
-                        statusEl.textContent = '✓ Harga dari xaus.com';
+                        applyPrice(price, 0, 0, 'metals.live');
+                        statusEl.textContent = '✓ Harga dari metals.live';
                         statusEl.className = 'model-status ready';
                         return true;
                     }
                 }
             } catch (e) {
-                console.warn('xaus.com failed:', e.message);
+                console.warn('metals.live failed:', e.message);
+            }
+
+            // API 3: coingecko (PAXG sebagai proxy gold)
+            try {
+                const response = await fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd&include_24hr_change=true', 5000);
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data['pax-gold'] && data['pax-gold'].usd) {
+                        const price = data['pax-gold'].usd;
+                        const changePct = data['pax-gold'].usd_24h_change || 0;
+                        applyPrice(price, price * changePct / 100, changePct, 'coingecko (PAXG)');
+                        statusEl.textContent = '✓ Harga dari coingecko (PAXG proxy)';
+                        statusEl.className = 'model-status ready';
+                        return true;
+                    }
+                }
+            } catch (e) {
+                console.warn('coingecko failed:', e.message);
             }
 
             // Semua gagal — tampilkan input manual
-            statusEl.textContent = '⚠ Auto-fetch gagal. Masukkan harga manual di bawah.';
+            statusEl.textContent = '⚠ Auto-fetch gagal. Masukkan harga manual.';
             statusEl.className = 'model-status fallback';
             document.getElementById('manualInput').classList.add('show');
-            document.getElementById('refreshBtn').disabled = false;
             return false;
         }
 
@@ -418,6 +412,7 @@
             prevLow = Math.min(price, prevClose) - range * 0.3;
 
             calculatePivotPoints(prevHigh, prevLow, prevClose);
+            runTechnicalAnalysis();
         }
 
         // ===== MANUAL PRICE =====
@@ -435,9 +430,6 @@
 
             document.getElementById('modelStatus').textContent = '✓ Harga manual diterapkan';
             document.getElementById('modelStatus').className = 'model-status ready';
-
-            // Jalankan analisis
-            runTechnicalAnalysis();
         }
 
         // ===== PIVOT POINTS =====
@@ -467,32 +459,30 @@
             let score = 0;
 
             // Momentum
-            let momentumScore = 0;
-            if (priceChangePct > 1.5) { momentumScore = 3; reasons.push('Momentum kuat ↑ (+3)'); }
-            else if (priceChangePct > 0.7) { momentumScore = 2; reasons.push('Momentum sedang ↑ (+2)'); }
-            else if (priceChangePct > 0.3) { momentumScore = 1; reasons.push('Momentum lemah ↑ (+1)'); }
-            else if (priceChangePct < -1.5) { momentumScore = -3; reasons.push('Momentum kuat ↓ (-3)'); }
-            else if (priceChangePct < -0.7) { momentumScore = -2; reasons.push('Momentum sedang ↓ (-2)'); }
-            else if (priceChangePct < -0.3) { momentumScore = -1; reasons.push('Momentum lemah ↓ (-1)'); }
-            else { reasons.push('Momentum flat (0)'); }
-            score += momentumScore;
+            if (priceChangePct > 1.5) { score += 3; reasons.push('Momentum kuat ↑'); }
+            else if (priceChangePct > 0.7) { score += 2; reasons.push('Momentum sedang ↑'); }
+            else if (priceChangePct > 0.3) { score += 1; reasons.push('Momentum lemah ↑'); }
+            else if (priceChangePct < -1.5) { score -= 3; reasons.push('Momentum kuat ↓'); }
+            else if (priceChangePct < -0.7) { score -= 2; reasons.push('Momentum sedang ↓'); }
+            else if (priceChangePct < -0.3) { score -= 1; reasons.push('Momentum lemah ↓'); }
+            else { reasons.push('Momentum flat'); }
 
             // Posisi vs pivot
             const pp = (prevHigh + prevLow + prevClose) / 3;
             const r1 = (2 * pp) - prevLow;
             const s1 = (2 * pp) - prevHigh;
 
-            if (currentPrice > r1) { score += 2; reasons.push('Harga di atas R1 → bullish (+2)'); }
-            else if (currentPrice > pp) { score += 1; reasons.push('Harga di atas Pivot → mildly bullish (+1)'); }
-            else if (currentPrice < s1) { score -= 2; reasons.push('Harga di bawah S1 → bearish (-2)'); }
-            else if (currentPrice < pp) { score -= 1; reasons.push('Harga di bawah Pivot → mildly bearish (-1)'); }
+            if (currentPrice > r1) { score += 2; reasons.push('Harga di atas R1'); }
+            else if (currentPrice > pp) { score += 1; reasons.push('Harga di atas Pivot'); }
+            else if (currentPrice < s1) { score -= 2; reasons.push('Harga di bawah S1'); }
+            else if (currentPrice < pp) { score -= 1; reasons.push('Harga di bawah Pivot'); }
 
             // Range position
             const range = prevHigh - prevLow;
             if (range > 0) {
                 const rangePos = (currentPrice - prevLow) / range;
-                if (rangePos > 0.8) { score += 1; reasons.push('Dekat high harian (+1)'); }
-                else if (rangePos < 0.2) { score -= 1; reasons.push('Dekat low harian (-1)'); }
+                if (rangePos > 0.8) { score += 1; reasons.push('Dekat high harian'); }
+                else if (rangePos < 0.2) { score -= 1; reasons.push('Dekat low harian'); }
             }
 
             let signal, confidence;
@@ -514,7 +504,6 @@
 
             const signal = signalResult.signal;
             const score = signalResult.score;
-
             const spread = 0.30;
             const atr = (prevHigh - prevLow) * 0.5;
 
@@ -530,7 +519,7 @@
                 entry = Math.min(currentPrice, s1 + spread);
                 entryNote = 'Entry di area support';
                 sl = Math.min(s2 - spread, entry - atr * 1.5);
-                slNote = 'SL di bawah S2 / 1.5x ATR';
+                slNote = 'SL di bawah S2';
                 tp = r1 + spread;
                 tpNote = 'TP di R1';
                 if (score > 3) { tp = r2 + spread; tpNote = 'TP di R2 (sinyal kuat)'; }
@@ -538,7 +527,7 @@
                 entry = Math.max(currentPrice, r1 - spread);
                 entryNote = 'Entry di area resistance';
                 sl = Math.max(r2 + spread, entry + atr * 1.5);
-                slNote = 'SL di atas R2 / 1.5x ATR';
+                slNote = 'SL di atas R2';
                 tp = s1 - spread;
                 tpNote = 'TP di S1';
                 if (score < -3) { tp = s2 - spread; tpNote = 'TP di S2 (sinyal kuat)'; }
@@ -584,7 +573,7 @@
                 : 'Tidak ada faktor dominan.';
         }
 
-        // ===== RUN TECHNICAL ANALYSIS =====
+        // ===== RUN TECHNICAL =====
         function runTechnicalAnalysis() {
             const result = calculateTechnicalSignal();
             displaySignal(result, 'Sinyal Teknikal');
@@ -594,8 +583,8 @@
         // ===== FETCH NEWS =====
         async function fetchNews() {
             const feeds = [
-                { name: 'Reuters', url: 'https://feeds.reuters.com/reuters/businessNews' },
-                { name: 'FXStreet', url: 'https://www.fxstreet.com/rss/news' }
+                { name: 'FXStreet', url: 'https://www.fxstreet.com/rss/news' },
+                { name: 'Reuters', url: 'https://feeds.reuters.com/reuters/businessNews' }
             ];
             const allNews = [];
             for (const feed of feeds) {
@@ -647,4 +636,13 @@
             /dollar/i, /usd/i, /dxy/i,
             /inflation/i, /cpi/i, /pce/i,
             /rate/i, /yield/i, /treasury/i,
-            /geopolit
+            /geopolitic/i, /war/i, /conflict/i, /tension/i, /crisis/i,
+            /recession/i, /slowdown/i,
+            /safe.?haven/i, /risk/i,
+        ];
+
+        function scoreNews(title, description) {
+            const text = title + ' ' + description;
+            let score = 0;
+            let reasons = [];
+            BULLISH_PATTERNS
