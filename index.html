@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAUUSD Market Analyst</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            padding: 16px;
+        }
+        .container { max-width: 900px; margin: 0 auto; }
+        h1 {
+            font-size: 24px;
+            font-weight: 300;
+            margin-bottom: 4px;
+            color: #fff;
+        }
+        .subtitle {
+            font-size: 13px;
+            color: #666;
+            margin-bottom: 24px;
+        }
+        .signal-box {
+            background: #141414;
+            border: 2px solid #222;
+            border-radius: 16px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 16px;
+            transition: all 0.3s;
+        }
+        .signal-box.buy { border-color: #30c060; background: #0f1a12; }
+        .signal-box.sell { border-color: #e04040; background: #1a0f0f; }
+        .signal-box.neutral { border-color: #666; background: #141414; }
+        .signal-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: #666;
+            margin-bottom: 12px;
+        }
+        .signal-value {
+            font-size: 72px;
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 8px;
+        }
+        .signal-value.buy { color: #30c060; }
+        .signal-value.sell { color: #e04040; }
+        .signal-value.neutral { color: #888; }
+        .signal-confidence {
+            font-size: 16px;
+            color: #888;
+        }
+        .signal-reason {
+            font-size: 12px;
+            color: #666;
+            margin-top: 12px;
+            line-height: 1.5;
+            text-align: left;
+        }
+        .model-status {
+            font-size: 12px;
+            color: #666;
+            text-align: center;
+            padding: 8px;
+            margin-bottom: 16px;
+        }
+        .model-status.loading { color: #f0a030; }
+        .model-status.ready { color: #30c060; }
+        .model-status.fallback { color: #f0a030; }
+        .card {
+            background: #141414;
+            border: 1px solid #222;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        .card-title {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #555;
+            margin-bottom: 12px;
+        }
+        .trade-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+        }
+        @media (max-width: 600px) {
+            .trade-grid { grid-template-columns: 1fr; }
+        }
+        .trade-item {
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
+            border-radius: 8px;
+            padding: 16px;
+            text-align: center;
+        }
+        .trade-item.entry { border-color: #4488ff; }
+        .trade-item.sl { border-color: #e04040; }
+        .trade-item.tp { border-color: #30c060; }
+        .trade-item.rr { border-color: #f0a030; }
+        .trade-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #666;
+            margin-bottom: 8px;
+        }
+        .trade-value {
+            font-size: 28px;
+            font-weight: 600;
+            color: #fff;
+            font-variant-numeric: tabular-nums;
+        }
+        .trade-item.entry .trade-value { color: #4488ff; }
+        .trade-item.sl .trade-value { color: #e04040; }
+        .trade-item.tp .trade-value { color: #30c060; }
+        .trade-item.rr .trade-value { color: #f0a030; }
+        .trade-note {
+            font-size: 10px;
+            color: #555;
+            margin-top: 6px;
+        }
+        .levels-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 8px;
+        }
+        .level-item {
+            background: #0d0d0d;
+            border: 1px solid #2a2a2a;
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+        }
+        .level-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #555;
+            margin-bottom: 4px;
+        }
+        .level-value {
+            font-size: 14px;
+            font-weight: 600;
+            color: #e0e0e0;
+            font-variant-numeric: tabular-nums;
+        }
+        .level-item.r { border-color: #3a1a1a; }
+        .level-item.r .level-value { color: #e04040; }
+        .level-item.s { border-color: #1a3a1a; }
+        .level-item.s .level-value { color: #30c060; }
+        .level-item.pp { border-color: #2a2a3a; }
+        .level-item.pp .level-value { color: #8888ff; }
+        .news-list { max-height: 400px; overflow-y: auto; }
+        .news-item {
+            padding: 10px 0;
+            border-bottom: 1px solid #1a1a1a;
+        }
+        .news-item:last-child { border-bottom: none; }
+        .news-title {
+            font-size: 12px;
+            color: #ccc;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+        .news-meta {
+            font-size: 10px;
+            color: #555;
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .sentiment-badge {
+            display: inline-block;
+            padding: 1px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        .sentiment-badge.positive { background: #1a3a1a; color: #30c060; }
+        .sentiment-badge.negative { background: #3a1a1a; color: #e04040; }
+        .sentiment-badge.neutral { background: #2a2a2a; color: #888; }
+        .btn {
+            width: 100%;
+            padding: 12px;
+            background: #fff;
+            color: #0a0a0a;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: inherit;
+        }
+        .btn:hover { background: #e0e0e0; }
+        .btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+        .disclaimer {
+            font-size: 11px;
+            color: #444;
+            text-align: center;
+            margin-top: 24px;
+            line-height: 1.5;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 14px;
+            height: 14px;
+            border: 2px solid #333;
+            border-top-color: #f0a030;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+            margin-right: 8px;
+            vertical-align: middle;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+        .price-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 13px;
+        }
+        .price-label { color: #888; }
+        .price-value { color: #e0e0e0; font-weight: 500; }
+        .price-value.up { color: #30c060; }
+        .price-value.down { color: #e04040; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>XAUUSD Market Analyst</h1>
+        <p class="subtitle">Live Price · Entry Level · SL · TP · News</p>
+
+        <div id="modelStatus" class="model-status loading">
+            <span class="loading-spinner"></span>Memuat...
+        </div>
+
+        <div id="signalBox" class="signal-box neutral">
+            <div class="signal-label">Sinyal</div>
+            <div id="signalValue" class="signal-value neutral">—</div>
+            <div id="signalConfidence" class="signal-confidence">Menunggu analisis...</div>
+            <div id="signalReason" class="signal-reason"></div>
+        </div>
+
+        <!-- ENTRY LEVELS -->
+        <div class="card" id="tradeCard" style="display:none;">
+            <div class="card-title">Entry Level</div>
+            <div class="trade-grid">
+                <div class="trade-item entry">
+                    <div class="trade-label">Entry</div>
+                    <div class="trade-value" id="entryLevel">—</div>
+                    <div class="trade-note" id="entryNote"></div>
+                </div>
+                <div class="trade-item sl">
+                    <div class="trade-label">Stop Loss</div>
+                    <div class="trade-value" id="slLevel">—</div>
+                    <div class="trade-note" id="slNote"></div>
+                </div>
+                <div class="trade-item tp">
+                    <div class="trade-label">Take Profit</div>
+                    <div class="trade-value" id="tpLevel">—</div>
+                    <div class="trade-note" id="tpNote"></div>
+                </div>
+                <div class="trade-item rr">
+                    <div class="trade-label">Risk / Reward</div>
+                    <div class="trade-value" id="rrValue">—</div>
+                    <div class="trade-note" id="rrNote"></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PRICE -->
+        <div class="card">
+            <div class="card-title">Harga XAUUSD</div>
+            <div class="price-row">
+                <span class="price-label">Harga Live</span>
+                <span class="price-value" id="livePrice">—</span>
+            </div>
+            <div class="price-row">
+                <span class="price-label">Perubahan 24h</span>
+                <span class="price-value" id="priceChange">—</span>
+            </div>
+            <div class="price-row">
+                <span class="price-label">Bias</span>
+                <span class="price-value" id="priceBias">—</span>
+            </div>
+        </div>
+
+        <!-- PIVOT LEVELS -->
+        <div class="card">
+            <div class="card-title">Pivot Points (Classic)</div>
+            <div class="levels-grid">
+                <div class="level-item s">
+                    <div class="level-label">S2</div>
+                    <div class="level-value" id="s2">—</div>
+                </div>
+                <div class="level-item s">
+                    <div class="level-label">S1</div>
+                    <div class="level-value" id="s1">—</div>
+                </div>
+                <div class="level-item pp">
+                    <div class="level-label">Pivot</div>
+                    <div class="level-value" id="pp">—</div>
+                </div>
+                <div class="level-item r">
+                    <div class="level-label">R1</div>
+                    <div class="level-value" id="r1">—</div>
+                </div>
+                <div class="level-item r">
+                    <div class="level-label">R2</div>
+                    <div class="level-value" id="r2">—</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEWS -->
+        <div class="card">
+            <div class="card-title">Berita Relevan XAUUSD</div>
+            <div id="newsContainer" class="news-list">
+                <div style="text-align:center;color:#666;padding:20px;">Memuat berita...</div>
+            </div>
+        </div>
+
+        <button id="refreshBtn" class="btn" onclick="runAnalysis()" disabled>Refresh Analisis</button>
+
+        <p class="disclaimer">
+            Analisis otomatis. Bukan saran keuangan. Selalu riset sendiri.
+        </p>
+    </div>
+
+    <script>
+        // ===== STATE =====
+        let currentPrice = null;
+        let priceChangePct = 0;
+        let prevClose = null;
+        let prevHigh = null;
+        let prevLow = null;
+
+        // ===== XAUUSD KEYWORDS =====
+        const BULLISH_PATTERNS = [
+            { pattern: /fed.*(dovish|cut|pause|ease|pivot)/i, weight: 3, label: 'Fed dovish' },
+            { pattern: /rate.*(cut|pause|lower)/i, weight: 3, label: 'Rate cut' },
+            { pattern: /(weak|weaker|fall|drop|decline).*(dollar|usd|dxy)/i, weight: 2.5, label: 'Weak USD' },
+            { pattern: /(inflation|inflationary)/i, weight: 1.5, label: 'Inflation' },
+            { pattern: /(geopolitic|war|conflict|tension|strike|attack|crisis)/i, weight: 2.5, label: 'Geopolitik' },
+            { pattern: /(recession|slowdown|contraction)/i, weight: 2, label: 'Resesi' },
+            { pattern: /(safe.?haven|risk.?off|uncertainty|fear)/i, weight: 2, label: 'Safe haven' },
+            { pattern: /(stimulus|qe|money printing|debt ceiling)/i, weight: 1.5, label: 'Stimulus' },
+            { pattern: /(gold|bullion|xau).*(rally|surge|rise|gain|climb|jump)/i, weight: 3, label: 'Gold rally' },
+            { pattern: /(central bank|reserve).*(buy|purchase|accumulate)/i, weight: 1.5, label: 'CB buying' },
+        ];
+
+        const BEARISH_PATTERNS = [
+            { pattern: /fed.*(hawkish|hike|raise|tighten)/i, weight: 3, label: 'Fed hawkish' },
+            { pattern: /rate.*(hike|raise|higher|increase)/i, weight: 3, label: 'Rate hike' },
+            { pattern: /(strong|stronger|rise|gain|rally).*(dollar|usd|dxy)/i, weight: 2.5, label: 'Strong USD' },
+            { pattern: /(yield|treasury|bond).*(rise|higher|gain|climb)/i, weight: 2, label: 'Yield naik' },
+            { pattern: /(recovery|optimism|rebound|improve)/i, weight: 1.5, label: 'Recovery' },
+            { pattern: /(peace|ceasefire|agreement|deal|resolution)/i, weight: 1.5, label: 'Peace deal' },
+            { pattern: /(gold|bullion|xau).*(fall|drop|decline|slip|slide|tumble)/i, weight: 3, label: 'Gold turun' },
+            { pattern: /(profit.?taking|correction|pullback)/i, weight: 1.5, label: 'Profit taking' },
+        ];
+
+        const RELEVANCE_PATTERNS = [
+            /gold/i, /xau/i, /bullion/i, /precious metal/i,
+            /fed/i, /federal reserve/i, /fomc/i, /powell/i,
+            /dollar/i, /usd/i, /dxy/i,
+            /inflation/i, /cpi/i, /pce/i, /ppi/i,
+            /rate/i, /yield/i, /treasury/i,
+            /geopolitic/i, /war/i, /conflict/i, /tension/i, /crisis/i,
+            /recession/i, /slowdown/i,
+            /safe.?haven/i, /risk/i,
+            /central bank/i, /reserve/i
+        ];
+
+        // ===== HELPERS =====
+        function scoreNews(title, description) {
+            const text = title + ' ' + description;
+            let score = 0;
+            let reasons = [];
+            BULLISH_PATTERNS.forEach(({ pattern, weight, label }) => {
+                if (pattern.test(text)) { score += weight; reasons.push(`+${weight} ${label}`); }
+            });
+            BEARISH_PATTERNS.forEach(({ pattern, weight, label }) => {
+                if (pattern.test(text)) { score -= weight; reasons.push(`-${weight} ${label}`); }
+            });
+            return { score, reasons };
+        }
+
+        function isRelevant(title, description) {
+            const text = title + ' ' + description;
+            return RELEVANCE_PATTERNS.some(p => p.test(text));
+        }
+
+        // ===== FETCH PRICE + OHLC =====
+        async function fetchPrice() {
+            try {
+                const response = await fetch('https://xaus.com/api/v1/spot');
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                const data = await response.json();
+                const price = data.price || data.data?.price;
+
+                if (price) {
+                    currentPrice = price;
+                    document.getElementById('livePrice').textContent = '$' + price.toFixed(2);
+
+                    const change = data.change_24h || data.data?.change_24h || 0;
+                    const changePct = data.change_percent_24h || data.data?.change_percent_24h || 0;
+                    priceChangePct = changePct;
+
+                    const changeEl = document.getElementById('priceChange');
+                    const isUp = change >= 0;
+                    changeEl.textContent = `${isUp ? '▲' : '▼'} $${Math.abs(change).toFixed(2)} (${Math.abs(changePct).toFixed(2)}%)`;
+                    changeEl.className = 'price-value ' + (isUp ? 'up' : 'down');
+
+                    const biasEl = document.getElementById('priceBias');
+                    if (changePct > 0.5) { biasEl.textContent = 'Bullish'; biasEl.className = 'price-value up'; }
+                    else if (changePct < -0.5) { biasEl.textContent = 'Bearish'; biasEl.className = 'price-value down'; }
+                    else { biasEl.textContent = 'Sideways'; biasEl.className = 'price-value'; }
+
+                    // Simulasi OHLC dari price + change
+                    // (XAUS API nggak kasih OHLC, jadi kita derive)
+                    prevClose = price / (1 + changePct / 100);
+                    const range = Math.abs(price - prevClose) * 1.5;
+                    prevHigh = Math.max(price, prevClose) + range * 0.3;
+                    prevLow = Math.min(price, prevClose) - range * 0.3;
+
+                    calculatePivotPoints(prevHigh, prevLow, prevClose);
+                }
+            } catch (e) {
+                console.warn('Price fetch error:', e);
+                document.getElementById('livePrice').textContent = '—';
+            }
+        }
+
+        // ===== PIVOT POINTS =====
+        function calculatePivotPoints(high, low, close) {
+            if (!high || !low || !close) return;
+
+            const pp = (high + low + close) / 3;
+            const r1 = (2 * pp) - low;
+            const s1 = (2 * pp) - high;
+            const r2 = pp + (high - low);
+            const s2 = pp - (high - low);
+
+            document.getElementById('pp').textContent = '$' + pp.toFixed(2);
+            document.getElementById('r1').textContent = '$' + r1.toFixed(2);
+            document.getElementById('r2').textContent = '$' + r2.toFixed(2);
+            document.getElementById('s1').textContent = '$' + s1.toFixed(2);
+            document.getElementById('s2').textContent = '$' + s2.toFixed(2);
+        }
+
+        // ===== FETCH NEWS =====
+        async function fetchNews() {
+            const feeds = [
+                { name: 'Reuters', url: 'https://feeds.reuters.com/reuters/businessNews' },
+                { name: 'FXStreet', url: 'https://www.fxstreet.com/rss/news' },
+                { name: 'BBC Business', url: 'http://feeds.bbci.co.uk/news/business/rss.xml' }
+            ];
+            const allNews = [];
+            for (const feed of feeds) {
+                try {
+                    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&count=15`;
+                    const response = await fetch(apiUrl);
+                    if (!response.ok) continue;
+                    const data = await response.json();
+                    if (data.status === 'ok' && data.items) {
+                        data.items.forEach(item => {
+                            allNews.push({
+                                title: item.title,
+                                description: (item.description || '').replace(/<[^>]*>/g, ''),
+                                link: item.link,
+                                pubDate: item.pubDate,
+                                source: feed.name
+                            });
+                        });
+                    }
+                } catch (e) { console.warn('Feed error:', e); }
+            }
+            return allNews;
+        }
+
+        // ===== CALCULATE TRADE LEVELS =====
+        function calculateTradeLevels(signal, score, newsReasons) {
+            if (!currentPrice || !prevHigh || !prevLow || !prevClose) {
+                document.getElementById('tradeCard').style.display = 'none';
+                return;
+            }
+
+            const spread = 0.30; // Typical XAUUSD spread
+            const atr = (prevHigh - prevLow) * 0.5; // Rough ATR approximation
+
+            const pp = (prevHigh + prevLow + prevClose) / 3;
+            const r1 = (2 * pp) - prevLow;
+            const s1 = (2 * pp) - prevHigh;
+            const r2 = pp + (prevHigh - prevLow);
+            const s2 = pp - (prevHigh - prevLow);
+
+            let entry, sl, tp, entryNote, slNote, tpNote;
+
+            if (signal.includes('BUY')) {
+                // Entry di support atau harga sekarang dengan buffer
+                entry = Math.min(currentPrice, s1 + spread);
+                entryNote = 'Entry di area support';
+
+                // SL di bawah S2 atau 1.5x ATR
+                sl = Math.min(s2 - spread, entry - atr * 1.5);
+                slNote = 'SL di bawah S2 / 1.5x ATR';
+
+                // TP di R1 atau R2
+                tp = r1 + spread;
+                tpNote = 'TP di R1';
+
+                if (score > 3) {
+                    tp = r2 + spread;
+                    tpNote = 'TP di R2 (sinyal kuat)';
+                }
+            } else if (signal.includes('SELL')) {
+                // Entry di resistance atau harga sekarang dengan buffer
+                entry = Math.max(currentPrice, r1 - spread);
+                entryNote = 'Entry di area resistance';
+
+                // SL di atas R2 atau 1.5x ATR
+                sl = Math.max(r2 + spread, entry + atr * 1.5);
+                slNote = 'SL di atas R2 / 1.5x ATR';
+
+                // TP di S1 atau S2
+                tp = s1 - spread;
+                tpNote = 'TP di S1';
+
+                if (score < -3) {
+                    tp = s2 - spread;
+                    tpNote = 'TP di S2 (sinyal kuat)';
+                }
+            } else {
+                // Neutral: tampilkan level tapi nggak ada trade
+                document.getElementById('tradeCard').style.display = 'none';
+                return;
+            }
+
+            // Hitung RR
+            const risk = Math.abs(entry - sl);
+            const reward = Math.abs(tp - entry);
+            const rr = risk > 0 ? (reward / risk).toFixed(2) : '—';
+
+            // Update UI
+            document.getElementById('entryLevel').textContent = '$' + entry.toFixed(2);
+            document.getElementById('entryNote').textContent = entryNote;
+            document.getElementById('slLevel').textContent = '$' + sl.toFixed(2);
+            document.getElementById('slNote').textContent = slNote;
+            document.getElementById('tpLevel').textContent = '$' + tp.toFixed(2);
+            document.getElementById('tpNote').textContent = tpNote;
+            document.getElementById('rrValue').textContent = '1:' + rr;
+            document.getElementById('rrNote').textContent = risk > 0 ? `Risk $${risk.toFixed(2)} · Reward $${reward.toFixed(2)}` : '';
+
+            document.getElementById('tradeCard').style.display = 'block';
+        }
+
+        // ===== ANALYZE =====
+        async function runAnalysis() {
+            const statusEl = document.getElementById('modelStatus');
+            const signalBox = document.getElementById('signalBox');
+            const signalValue = document.getElementById('signalValue');
+            const signalConfidence = document.getElementById('signalConfidence');
+            const signalReason = document.getElementById('signalReason');
+            const newsContainer = document.getElementById('newsContainer');
+
+            statusEl.innerHTML = '<span class="loading-spinner"></span>Menganalisis...';
+            statusEl.className = 'model-status loading';
+
+            await fetchPrice();
+            const allNews = await fetchNews();
+
+            const relevant = allNews.filter(n => isRelevant(n.title, n.description));
+            if (relevant.length === 0) {
+                newsContainer.innerHTML = '<div style="text-align:center;color:#e04040;padding:20px;">Tidak ada berita relevan.</div>';
+                statusEl.textContent = '⚠ Tidak ada berita relevan';
+                statusEl.className = 'model-status fallback';
+                return;
+            }
+
+            let totalScore = 0;
+            let allReasons = [];
+            relevant.forEach(item => {
+                const { score, reasons } = scoreNews(item.title, item.description);
+                item.score = score;
+                item.reasons = reasons;
+                totalScore += score;
+                allReasons.push(...reasons);
+            });
+
+            const avgScore = totalScore / relevant.length;
+
+            // Price momentum
+            let priceScore = 0;
+            if (priceChangePct > 1) priceScore = 2;
+            else if (priceChangePct > 0.5) priceScore = 1;
+            else if (priceChangePct < -1) priceScore = -2;
+            else if (priceChangePct < -0.5) priceScore = -1;
+
+            // Final: news 70%, price 30%
+            const finalScore = (avgScore * 0.7) + (priceScore * 0.3);
+
+            // Signal
+            let signal, confidence;
+            if (finalScore >= 0.8) { signal = 'BUY'; confidence = Math.min(Math.round(50 + finalScore * 15), 95); }
+            else if (finalScore <= -0.8) { signal = 'SELL'; confidence = Math.min(Math.round(50 + Math.abs(finalScore) * 15), 95); }
+            else if (finalScore > 0.2) { signal = 'WEAK BUY'; confidence = Math.round(40 + finalScore * 20); }
+            else if (finalScore < -0.2) { signal = 'WEAK SELL'; confidence = Math.round(40 + Math.abs(finalScore) * 20); }
+            else { signal = 'NEUTRAL'; confidence = Math.round(60 - Math.abs(finalScore) * 30); }
+
+            // Update UI
+            const signalClass = signal.includes('BUY') ? 'buy' : signal.includes('SELL') ? 'sell' : 'neutral';
+            signalBox.className = `signal-box ${signalClass}`;
+            signalValue.textContent = signal;
+            signalValue.className = `signal-value ${signalClass}`;
+            signalConfidence.textContent = `Confidence: ${confidence}% · ${relevant.length} berita relevan`;
+
+            const uniqueReasons = [...new Set(allReasons)].slice(0, 5);
+            signalReason.textContent = uniqueReasons.length > 0
+                ? 'Faktor: ' + uniqueReasons.join(', ')
+                : 'Tidak ada faktor dominan.';
+
+            // Trade levels
+            calculateTradeLevels(signal, finalScore, allReasons);
+
+            // Render news
+            newsContainer.innerHTML = relevant.slice(0, 15).map(item => {
+                const score = item.score;
+                const label = score > 1 ? 'BULLISH' : score < -1 ? 'BEARISH' : 'NEUTRAL';
+                const cls = score > 1 ? 'positive' : score < -1 ? 'negative' : 'neutral';
+                return `
+                    <div class="news-item">
+                        <div class="news-title">${item.title}</div>
+                        <div class="news-meta">
+                            <span class="sentiment-badge ${cls}">${label}</span>
+                            <span>Skor: ${score > 0 ? '+' : ''}${score.toFixed(1)}</span>
+                            <span>· ${item.source}</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            statusEl.textContent = '✓ Analisis selesai';
+            statusEl.className = 'model-status ready';
+        }
+
+        // ===== INIT =====
+        window.runAnalysis = runAnalysis;
+        document.addEventListener('DOMContentLoaded', () => {
+            document.getElementById('refreshBtn').disabled = false;
+            runAnalysis();
+            setInterval(runAnalysis, 300000); // 5 menit
+        });
+    </script>
+</body>
+</html>
