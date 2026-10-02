@@ -1,759 +1,983 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="en" class="dark">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>XAUUSD Market Analyst</title>
-<style>
-* { margin: 0; padding: 0; box-sizing: border-box; }
-body {
-    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-    background: #0a0a0a; color: #e0e0e0; min-height: 100vh; padding: 16px;
-}
-.container { max-width: 900px; margin: 0 auto; }
-h1 { font-size: 24px; font-weight: 300; margin-bottom: 4px; color: #fff; }
-.subtitle { font-size: 13px; color: #666; margin-bottom: 24px; }
-
-.mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
-.mode-btn {
-    flex: 1; padding: 10px; background: #141414; border: 1px solid #222;
-    border-radius: 8px; color: #666; font-size: 13px; cursor: pointer;
-    font-family: inherit; transition: all 0.2s;
-}
-.mode-btn.active { background: #1a1a1a; border-color: #4488ff; color: #4488ff; }
-
-.signal-box {
-    background: #141414; border: 2px solid #222; border-radius: 16px;
-    padding: 32px; text-align: center; margin-bottom: 16px; transition: all 0.3s;
-}
-.signal-box.buy { border-color: #30c060; background: #0f1a12; }
-.signal-box.sell { border-color: #e04040; background: #1a0f0f; }
-.signal-box.neutral { border-color: #666; background: #141414; }
-.signal-label {
-    font-size: 12px; text-transform: uppercase; letter-spacing: 2px;
-    color: #666; margin-bottom: 12px;
-}
-.signal-value {
-    font-size: 72px; font-weight: 700; letter-spacing: -2px; margin-bottom: 8px;
-}
-.signal-value.buy { color: #30c060; }
-.signal-value.sell { color: #e04040; }
-.signal-value.neutral { color: #888; }
-.signal-confidence { font-size: 16px; color: #888; }
-.signal-reason {
-    font-size: 12px; color: #666; margin-top: 12px;
-    line-height: 1.5; text-align: left;
-}
-
-.model-status {
-    font-size: 12px; color: #666; text-align: center;
-    padding: 8px; margin-bottom: 16px;
-}
-.model-status.loading { color: #f0a030; }
-.model-status.ready { color: #30c060; }
-.model-status.fallback { color: #f0a030; }
-.model-status.error { color: #e04040; }
-
-.card {
-    background: #141414; border: 1px solid #222; border-radius: 12px;
-    padding: 20px; margin-bottom: 16px;
-}
-.card-title {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
-    color: #555; margin-bottom: 12px;
-}
-
-.trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-@media (max-width: 600px) { .trade-grid { grid-template-columns: 1fr; } }
-.trade-item {
-    background: #0d0d0d; border: 1px solid #2a2a2a;
-    border-radius: 8px; padding: 16px; text-align: center;
-}
-.trade-item.entry { border-color: #4488ff; }
-.trade-item.sl { border-color: #e04040; }
-.trade-item.tp { border-color: #30c060; }
-.trade-item.rr { border-color: #f0a030; }
-.trade-label {
-    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
-    color: #666; margin-bottom: 8px;
-}
-.trade-value {
-    font-size: 28px; font-weight: 600; color: #fff;
-    font-variant-numeric: tabular-nums;
-}
-.trade-item.entry .trade-value { color: #4488ff; }
-.trade-item.sl .trade-value { color: #e04040; }
-.trade-item.tp .trade-value { color: #30c060; }
-.trade-item.rr .trade-value { color: #f0a030; }
-.trade-note { font-size: 10px; color: #555; margin-top: 6px; }
-
-.levels-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-.level-item {
-    background: #0d0d0d; border: 1px solid #2a2a2a;
-    border-radius: 6px; padding: 10px; text-align: center;
-}
-.level-label {
-    font-size: 10px; text-transform: uppercase; color: #555; margin-bottom: 4px;
-}
-.level-value {
-    font-size: 14px; font-weight: 600; color: #e0e0e0;
-    font-variant-numeric: tabular-nums;
-}
-.level-item.r { border-color: #3a1a1a; }
-.level-item.r .level-value { color: #e04040; }
-.level-item.s { border-color: #1a3a1a; }
-.level-item.s .level-value { color: #30c060; }
-.level-item.pp { border-color: #2a2a3a; }
-.level-item.pp .level-value { color: #8888ff; }
-
-.news-list { max-height: 400px; overflow-y: auto; }
-.news-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
-.news-item:last-child { border-bottom: none; }
-.news-title { font-size: 12px; color: #ccc; margin-bottom: 4px; line-height: 1.4; }
-.news-meta {
-    font-size: 10px; color: #555; display: flex;
-    gap: 8px; align-items: center; flex-wrap: wrap;
-}
-.sentiment-badge {
-    display: inline-block; padding: 1px 6px; border-radius: 3px;
-    font-size: 9px; font-weight: 600; text-transform: uppercase;
-}
-.sentiment-badge.positive { background: #1a3a1a; color: #30c060; }
-.sentiment-badge.negative { background: #3a1a1a; color: #e04040; }
-.sentiment-badge.neutral { background: #2a2a2a; color: #888; }
-
-.btn {
-    width: 100%; padding: 12px; background: #fff; color: #0a0a0a;
-    border: none; border-radius: 8px; font-size: 14px; font-weight: 500;
-    cursor: pointer; font-family: inherit;
-}
-.btn:hover { background: #e0e0e0; }
-.btn:disabled { background: #333; color: #666; cursor: not-allowed; }
-.btn-secondary {
-    background: #1a1a1a; color: #e0e0e0; border: 1px solid #2a2a2a;
-    margin-top: 8px;
-}
-.btn-secondary:hover { background: #2a2a2a; }
-
-.disclaimer {
-    font-size: 11px; color: #444; text-align: center;
-    margin-top: 24px; line-height: 1.5;
-}
-
-.loading-spinner {
-    display: inline-block; width: 14px; height: 14px;
-    border: 2px solid #333; border-top-color: #f0a030;
-    border-radius: 50%; animation: spin 0.8s linear infinite;
-    margin-right: 8px; vertical-align: middle;
-}
-@keyframes spin { to { transform: rotate(360deg); } }
-
-.price-row {
-    display: flex; justify-content: space-between;
-    padding: 6px 0; font-size: 13px;
-}
-.price-label { color: #888; }
-.price-value { color: #e0e0e0; font-weight: 500; }
-.price-value.up { color: #30c060; }
-.price-value.down { color: #e04040; }
-
-.manual-input {
-    display: none; margin-top: 12px; padding-top: 12px;
-    border-top: 1px solid #222;
-}
-.manual-input.show { display: block; }
-.manual-input input {
-    width: 100%; padding: 10px; background: #0d0d0d;
-    border: 1px solid #2a2a2a; border-radius: 6px;
-    color: #e0e0e0; font-size: 14px; font-family: inherit;
-    margin-bottom: 8px;
-}
-.manual-input input:focus { outline: none; border-color: #4488ff; }
-.manual-input label {
-    font-size: 11px; color: #888; display: block; margin-bottom: 4px;
-}
-</style>
-</head>
-<body>
-<div class="container">
-    <h1>XAUUSD Market Analyst</h1>
-    <p class="subtitle">Live Price · Entry Level · SL · TP</p>
-
-    <div class="mode-toggle">
-        <button class="mode-btn active" id="btnTechnical">Technical Only</button>
-        <button class="mode-btn" id="btnCombined">Technical + News</button>
-    </div>
-
-    <div id="modelStatus" class="model-status loading">
-        <span class="loading-spinner"></span>Memuat harga...
-    </div>
-
-    <div id="signalBox" class="signal-box neutral">
-        <div class="signal-label" id="signalLabel">Sinyal Teknikal</div>
-        <div id="signalValue" class="signal-value neutral">—</div>
-        <div id="signalConfidence" class="signal-confidence">Menunggu analisis...</div>
-        <div id="signalReason" class="signal-reason"></div>
-    </div>
-
-    <div class="card" id="tradeCard" style="display:none;">
-        <div class="card-title">Entry Level</div>
-        <div class="trade-grid">
-            <div class="trade-item entry">
-                <div class="trade-label">Entry</div>
-                <div class="trade-value" id="entryLevel">—</div>
-                <div class="trade-note" id="entryNote"></div>
-            </div>
-            <div class="trade-item sl">
-                <div class="trade-label">Stop Loss</div>
-                <div class="trade-value" id="slLevel">—</div>
-                <div class="trade-note" id="slNote"></div>
-            </div>
-            <div class="trade-item tp">
-                <div class="trade-label">Take Profit</div>
-                <div class="trade-value" id="tpLevel">—</div>
-                <div class="trade-note" id="tpNote"></div>
-            </div>
-            <div class="trade-item rr">
-                <div class="trade-label">Risk / Reward</div>
-                <div class="trade-value" id="rrValue">—</div>
-                <div class="trade-note" id="rrNote"></div>
-            </div>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Harga XAUUSD</div>
-        <div class="price-row">
-            <span class="price-label">Harga Live</span>
-            <span class="price-value" id="livePrice">—</span>
-        </div>
-        <div class="price-row">
-            <span class="price-label">Perubahan 24h</span>
-            <span class="price-value" id="priceChange">—</span>
-        </div>
-        <div class="price-row">
-            <span class="price-label">Bias</span>
-            <span class="price-value" id="priceBias">—</span>
-        </div>
-        <div class="price-row">
-            <span class="price-label">Sumber</span>
-            <span class="price-value" id="priceSource" style="font-size:11px;color:#555;">—</span>
-        </div>
-        <div class="manual-input" id="manualInput">
-            <label>Harga manual (kalau auto-fetch gagal)</label>
-            <input type="number" id="manualPrice" placeholder="Contoh: 4019.30" step="0.01">
-            <label>Perubahan 24h (%)</label>
-            <input type="number" id="manualChange" placeholder="Contoh: 0.5" step="0.01">
-            <button class="btn btn-secondary" id="btnManual">Terapkan Harga Manual</button>
-        </div>
-    </div>
-
-    <div class="card">
-        <div class="card-title">Pivot Points (Classic)</div>
-        <div class="levels-grid">
-            <div class="level-item s"><div class="level-label">S2</div><div class="level-value" id="s2">—</div></div>
-            <div class="level-item s"><div class="level-label">S1</div><div class="level-value" id="s1">—</div></div>
-            <div class="level-item pp"><div class="level-label">Pivot</div><div class="level-value" id="pp">—</div></div>
-            <div class="level-item r"><div class="level-label">R1</div><div class="level-value" id="r1">—</div></div>
-            <div class="level-item r"><div class="level-label">R2</div><div class="level-value" id="r2">—</div></div>
-        </div>
-    </div>
-
-    <div class="card" id="newsCard">
-        <div class="card-title">Berita Relevan XAUUSD</div>
-        <div id="newsContainer" class="news-list">
-            <div style="text-align:center;color:#666;padding:20px;">Klik "Technical + News" untuk load berita</div>
-        </div>
-    </div>
-
-    <button id="refreshBtn" class="btn">Refresh Analisis</button>
-    <p class="disclaimer">Analisis otomatis. Bukan saran keuangan. Selalu riset sendiri.</p>
-</div>
-
-<script>
-// ===== STATE =====
-var currentPrice = null;
-var priceChangePct = 0;
-var prevClose = null;
-var prevHigh = null;
-var prevLow = null;
-var currentMode = 'technical';
-
-// ===== FETCH WITH TIMEOUT =====
-function fetchWithTimeout(url, timeout) {
-    timeout = timeout || 5000;
-    var controller = new AbortController();
-    var timer = setTimeout(function() { controller.abort(); }, timeout);
-    return fetch(url, { signal: controller.signal }).then(function(response) {
-        clearTimeout(timer);
-        return response;
-    }).catch(function(e) {
-        clearTimeout(timer);
-        throw e;
-    });
-}
-
-// ===== FETCH PRICE =====
-function fetchPrice() {
-    var statusEl = document.getElementById('modelStatus');
-    statusEl.innerHTML = '<span class="loading-spinner"></span>Fetch harga...';
-    statusEl.className = 'model-status loading';
-
-    // API 1: gold-api.com
-    return fetchWithTimeout('https://api.gold-api.com/price/XAU', 5000)
-        .then(function(response) {
-            if (!response.ok) throw new Error('HTTP ' + response.status);
-            return response.json();
-        })
-        .then(function(data) {
-            var price = data.price || data.ask;
-            if (price) {
-                applyPrice(price, 0, 0, 'gold-api.com');
-                statusEl.textContent = '✓ Harga dari gold-api.com';
-                statusEl.className = 'model-status ready';
-                return true;
-            }
-            throw new Error('No price');
-        })
-        .catch(function(e) {
-            console.warn('gold-api.com failed:', e.message);
-            // API 2: coingecko (PAXG proxy)
-            return fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd&include_24hr_change=true', 5000)
-                .then(function(response) {
-                    if (!response.ok) throw new Error('HTTP ' + response.status);
-                    return response.json();
-                })
-                .then(function(data) {
-                    if (data['pax-gold'] && data['pax-gold'].usd) {
-                        var price = data['pax-gold'].usd;
-                        var changePct = data['pax-gold'].usd_24h_change || 0;
-                        applyPrice(price, price * changePct / 100, changePct, 'coingecko (PAXG)');
-                        statusEl.textContent = '✓ Harga dari coingecko (PAXG proxy)';
-                        statusEl.className = 'model-status ready';
-                        return true;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XAUUSD Market Analyst Pro</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        darkbg: '#0a0a0a',
+                        cardbg: '#141414',
+                        cardborder: '#262626',
+                        gold: '#f59e0b',
+                        goldlight: '#fbbf24'
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
                     }
-                    throw new Error('No price');
-                })
-                .catch(function(e2) {
-                    console.warn('coingecko failed:', e2.message);
-                    // Semua gagal
-                    statusEl.textContent = '⚠ Auto-fetch gagal. Masukkan harga manual.';
-                    statusEl.className = 'model-status fallback';
-                    document.getElementById('manualInput').classList.add('show');
-                    return false;
-                });
-        });
-}
-
-// ===== APPLY PRICE =====
-function applyPrice(price, change, changePct, source) {
-    currentPrice = price;
-    priceChangePct = changePct || 0;
-
-    document.getElementById('livePrice').textContent = '$' + price.toFixed(2);
-
-    var changeEl = document.getElementById('priceChange');
-    var isUp = change >= 0;
-    changeEl.textContent = (isUp ? '▲' : '▼') + ' $' + Math.abs(change).toFixed(2) + ' (' + Math.abs(changePct).toFixed(2) + '%)';
-    changeEl.className = 'price-value ' + (isUp ? 'up' : 'down');
-
-    var biasEl = document.getElementById('priceBias');
-    if (changePct > 0.5) { biasEl.textContent = 'Bullish'; biasEl.className = 'price-value up'; }
-    else if (changePct < -0.5) { biasEl.textContent = 'Bearish'; biasEl.className = 'price-value down'; }
-    else { biasEl.textContent = 'Sideways'; biasEl.className = 'price-value'; }
-
-    document.getElementById('priceSource').textContent = source;
-    document.getElementById('manualInput').classList.remove('show');
-
-    // Derive OHLC
-    if (changePct !== 0) {
-        prevClose = price / (1 + changePct / 100);
-    } else {
-        prevClose = price * 0.998;
-    }
-    var range = Math.abs(price - prevClose) * 1.5;
-    prevHigh = Math.max(price, prevClose) + range * 0.3;
-    prevLow = Math.min(price, prevClose) - range * 0.3;
-
-    calculatePivotPoints(prevHigh, prevLow, prevClose);
-    runTechnicalAnalysis();
-}
-
-// ===== MANUAL PRICE =====
-function applyManualPrice() {
-    var price = parseFloat(document.getElementById('manualPrice').value);
-    var changePct = parseFloat(document.getElementById('manualChange').value) || 0;
-
-    if (!price || price <= 0) {
-        alert('Masukkan harga yang valid');
-        return;
-    }
-
-    var change = price * (changePct / 100);
-    applyPrice(price, change, changePct, 'manual');
-
-    document.getElementById('modelStatus').textContent = '✓ Harga manual diterapkan';
-    document.getElementById('modelStatus').className = 'model-status ready';
-}
-
-// ===== PIVOT POINTS =====
-function calculatePivotPoints(high, low, close) {
-    if (!high || !low || !close) return;
-    var pp = (high + low + close) / 3;
-    var r1 = (2 * pp) - low;
-    var s1 = (2 * pp) - high;
-    var r2 = pp + (high - low);
-    var s2 = pp - (high - low);
-
-    document.getElementById('pp').textContent = '$' + pp.toFixed(2);
-    document.getElementById('r1').textContent = '$' + r1.toFixed(2);
-    document.getElementById('r2').textContent = '$' + r2.toFixed(2);
-    document.getElementById('s1').textContent = '$' + s1.toFixed(2);
-    document.getElementById('s2').textContent = '$' + s2.toFixed(2);
-}
-
-// ===== TECHNICAL SIGNAL =====
-function calculateTechnicalSignal() {
-    if (!currentPrice || !prevHigh || !prevLow || !prevClose) {
-        return { signal: 'NEUTRAL', confidence: 0, reasons: ['Data harga tidak cukup'], score: 0 };
-    }
-
-    var reasons = [];
-    var score = 0;
-
-    if (priceChangePct > 1.5) { score += 3; reasons.push('Momentum kuat ↑'); }
-    else if (priceChangePct > 0.7) { score += 2; reasons.push('Momentum sedang ↑'); }
-    else if (priceChangePct > 0.3) { score += 1; reasons.push('Momentum lemah ↑'); }
-    else if (priceChangePct < -1.5) { score -= 3; reasons.push('Momentum kuat ↓'); }
-    else if (priceChangePct < -0.7) { score -= 2; reasons.push('Momentum sedang ↓'); }
-    else if (priceChangePct < -0.3) { score -= 1; reasons.push('Momentum lemah ↓'); }
-    else { reasons.push('Momentum flat'); }
-
-    var pp = (prevHigh + prevLow + prevClose) / 3;
-    var r1 = (2 * pp) - prevLow;
-    var s1 = (2 * pp) - prevHigh;
-
-    if (currentPrice > r1) { score += 2; reasons.push('Harga di atas R1'); }
-    else if (currentPrice > pp) { score += 1; reasons.push('Harga di atas Pivot'); }
-    else if (currentPrice < s1) { score -= 2; reasons.push('Harga di bawah S1'); }
-    else if (currentPrice < pp) { score -= 1; reasons.push('Harga di bawah Pivot'); }
-
-    var range = prevHigh - prevLow;
-    if (range > 0) {
-        var rangePos = (currentPrice - prevLow) / range;
-        if (rangePos > 0.8) { score += 1; reasons.push('Dekat high harian'); }
-        else if (rangePos < 0.2) { score -= 1; reasons.push('Dekat low harian'); }
-    }
-
-    var signal, confidence;
-    if (score >= 4) { signal = 'BUY'; confidence = Math.min(50 + score * 8, 90); }
-    else if (score <= -4) { signal = 'SELL'; confidence = Math.min(50 + Math.abs(score) * 8, 90); }
-    else if (score > 1) { signal = 'WEAK BUY'; confidence = 40 + score * 8; }
-    else if (score < -1) { signal = 'WEAK SELL'; confidence = 40 + Math.abs(score) * 8; }
-    else { signal = 'NEUTRAL'; confidence = 60; }
-
-    return { signal: signal, confidence: confidence, reasons: reasons, score: score };
-}
-
-// ===== TRADE LEVELS =====
-function calculateTradeLevels(signalResult) {
-    if (!currentPrice || !prevHigh || !prevLow || !prevClose) {
-        document.getElementById('tradeCard').style.display = 'none';
-        return;
-    }
-
-    var signal = signalResult.signal;
-    var score = signalResult.score;
-    var spread = 0.30;
-    var atr = (prevHigh - prevLow) * 0.5;
-
-    var pp = (prevHigh + prevLow + prevClose) / 3;
-    var r1 = (2 * pp) - prevLow;
-    var s1 = (2 * pp) - prevHigh;
-    var r2 = pp + (prevHigh - prevLow);
-    var s2 = pp - (prevHigh - prevLow);
-
-    var entry, sl, tp, entryNote, slNote, tpNote;
-
-    if (signal.indexOf('BUY') !== -1) {
-        entry = Math.min(currentPrice, s1 + spread);
-        entryNote = 'Entry di area support';
-        sl = Math.min(s2 - spread, entry - atr * 1.5);
-        slNote = 'SL di bawah S2';
-        tp = r1 + spread;
-        tpNote = 'TP di R1';
-        if (score > 3) { tp = r2 + spread; tpNote = 'TP di R2 (sinyal kuat)'; }
-    } else if (signal.indexOf('SELL') !== -1) {
-        entry = Math.max(currentPrice, r1 - spread);
-        entryNote = 'Entry di area resistance';
-        sl = Math.max(r2 + spread, entry + atr * 1.5);
-        slNote = 'SL di atas R2';
-        tp = s1 - spread;
-        tpNote = 'TP di S1';
-        if (score < -3) { tp = s2 - spread; tpNote = 'TP di S2 (sinyal kuat)'; }
-    } else {
-        document.getElementById('tradeCard').style.display = 'none';
-        return;
-    }
-
-    var risk = Math.abs(entry - sl);
-    var reward = Math.abs(tp - entry);
-    var rr = risk > 0 ? (reward / risk).toFixed(2) : '—';
-
-    document.getElementById('entryLevel').textContent = '$' + entry.toFixed(2);
-    document.getElementById('entryNote').textContent = entryNote;
-    document.getElementById('slLevel').textContent = '$' + sl.toFixed(2);
-    document.getElementById('slNote').textContent = slNote;
-    document.getElementById('tpLevel').textContent = '$' + tp.toFixed(2);
-    document.getElementById('tpNote').textContent = tpNote;
-    document.getElementById('rrValue').textContent = '1:' + rr;
-    document.getElementById('rrNote').textContent = risk > 0 ? 'Risk $' + risk.toFixed(2) + ' · Reward $' + reward.toFixed(2) : '';
-    document.getElementById('tradeCard').style.display = 'block';
-}
-
-// ===== DISPLAY SIGNAL =====
-function displaySignal(result, label) {
-    var signalBox = document.getElementById('signalBox');
-    var signalValue = document.getElementById('signalValue');
-    var signalConfidence = document.getElementById('signalConfidence');
-    var signalReason = document.getElementById('signalReason');
-    var signalLabel = document.getElementById('signalLabel');
-
-    signalLabel.textContent = label;
-
-    var signalClass = result.signal.indexOf('BUY') !== -1 ? 'buy' : result.signal.indexOf('SELL') !== -1 ? 'sell' : 'neutral';
-    signalBox.className = 'signal-box ' + signalClass;
-    signalValue.textContent = result.signal;
-    signalValue.className = 'signal-value ' + signalClass;
-    signalConfidence.textContent = 'Confidence: ' + result.confidence + '%';
-
-    var uniqueReasons = [];
-    for (var i = 0; i < result.reasons.length; i++) {
-        if (uniqueReasons.indexOf(result.reasons[i]) === -1) uniqueReasons.push(result.reasons[i]);
-    }
-    uniqueReasons = uniqueReasons.slice(0, 5);
-    signalReason.textContent = uniqueReasons.length > 0 ? 'Faktor: ' + uniqueReasons.join(', ') : 'Tidak ada faktor dominan.';
-}
-
-// ===== RUN TECHNICAL =====
-function runTechnicalAnalysis() {
-    var result = calculateTechnicalSignal();
-    displaySignal(result, 'Sinyal Teknikal');
-    calculateTradeLevels(result);
-}
-
-// ===== XAUUSD KEYWORDS =====
-var BULLISH_PATTERNS = [
-    { pattern: /fed.*(dovish|cut|pause|ease|pivot)/i, weight: 3, label: 'Fed dovish' },
-    { pattern: /rate.*(cut|pause|lower)/i, weight: 3, label: 'Rate cut' },
-    { pattern: /(weak|weaker|fall|drop|decline).*(dollar|usd|dxy)/i, weight: 2.5, label: 'Weak USD' },
-    { pattern: /(inflation|inflationary)/i, weight: 1.5, label: 'Inflation' },
-    { pattern: /(geopolitic|war|conflict|tension|strike|attack|crisis)/i, weight: 2.5, label: 'Geopolitik' },
-    { pattern: /(recession|slowdown|contraction)/i, weight: 2, label: 'Resesi' },
-    { pattern: /(safe.?haven|risk.?off|uncertainty|fear)/i, weight: 2, label: 'Safe haven' },
-    { pattern: /(gold|bullion|xau).*(rally|surge|rise|gain|climb|jump)/i, weight: 3, label: 'Gold rally' }
-];
-
-var BEARISH_PATTERNS = [
-    { pattern: /fed.*(hawkish|hike|raise|tighten)/i, weight: 3, label: 'Fed hawkish' },
-    { pattern: /rate.*(hike|raise|higher|increase)/i, weight: 3, label: 'Rate hike' },
-    { pattern: /(strong|stronger|rise|gain|rally).*(dollar|usd|dxy)/i, weight: 2.5, label: 'Strong USD' },
-    { pattern: /(yield|treasury|bond).*(rise|higher|gain|climb)/i, weight: 2, label: 'Yield naik' },
-    { pattern: /(recovery|optimism|rebound|improve)/i, weight: 1.5, label: 'Recovery' },
-    { pattern: /(gold|bullion|xau).*(fall|drop|decline|slip|slide|tumble)/i, weight: 3, label: 'Gold turun' }
-];
-
-var RELEVANCE_PATTERNS = [
-    /gold/i, /xau/i, /bullion/i,
-    /fed/i, /federal reserve/i, /fomc/i, /powell/i,
-    /dollar/i, /usd/i, /dxy/i,
-    /inflation/i, /cpi/i, /pce/i,
-    /rate/i, /yield/i, /treasury/i,
-    /geopolitic/i, /war/i, /conflict/i, /tension/i, /crisis/i,
-    /recession/i, /slowdown/i,
-    /safe.?haven/i, /risk/i
-];
-
-function scoreNews(title, description) {
-    var text = title + ' ' + description;
-    var score = 0;
-    var reasons = [];
-    for (var i = 0; i < BULLISH_PATTERNS.length; i++) {
-        if (BULLISH_PATTERNS[i].pattern.test(text)) {
-            score += BULLISH_PATTERNS[i].weight;
-            reasons.push('+' + BULLISH_PATTERNS[i].weight + ' ' + BULLISH_PATTERNS[i].label);
-        }
-    }
-    for (var j = 0; j < BEARISH_PATTERNS.length; j++) {
-        if (BEARISH_PATTERNS[j].pattern.test(text)) {
-            score -= BEARISH_PATTERNS[j].weight;
-            reasons.push('-' + BEARISH_PATTERNS[j].weight + ' ' + BEARISH_PATTERNS[j].label);
-        }
-    }
-    return { score: score, reasons: reasons };
-}
-
-function isRelevant(title, description) {
-    var text = title + ' ' + description;
-    for (var i = 0; i < RELEVANCE_PATTERNS.length; i++) {
-        if (RELEVANCE_PATTERNS[i].test(text)) return true;
-    }
-    return false;
-}
-
-// ===== FETCH NEWS =====
-function fetchNews() {
-    var feeds = [
-        { name: 'FXStreet', url: 'https://www.fxstreet.com/rss/news' },
-        { name: 'Reuters', url: 'https://feeds.reuters.com/reuters/businessNews' }
-    ];
-    var promises = feeds.map(function(feed) {
-        var apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feed.url) + '&count=15';
-        return fetchWithTimeout(apiUrl, 8000)
-            .then(function(response) {
-                if (!response.ok) throw new Error('HTTP ' + response.status);
-                return response.json();
-            })
-            .then(function(data) {
-                var items = [];
-                if (data.status === 'ok' && data.items) {
-                    data.items.forEach(function(item) {
-                        items.push({
-                            title: item.title,
-                            description: (item.description || '').replace(/<[^>]*>/g, ''),
-                            link: item.link,
-                            pubDate: item.pubDate,
-                            source: feed.name
-                        });
-                    });
                 }
-                return items;
-            })
-            .catch(function(e) {
-                console.warn('Feed ' + feed.name + ' failed:', e.message);
-                return [];
-            });
-    });
-
-    return Promise.all(promises).then(function(results) {
-        var allNews = [];
-        results.forEach(function(items) { allNews = allNews.concat(items); });
-        return allNews;
-    });
-}
-
-// ===== RUN COMBINED ANALYSIS =====
-function runCombinedAnalysis() {
-    var statusEl = document.getElementById('modelStatus');
-    var newsContainer = document.getElementById('newsContainer');
-
-    statusEl.innerHTML = '<span class="loading-spinner"></span>Fetch berita...';
-    statusEl.className = 'model-status loading';
-    newsContainer.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Memuat berita...</div>';
-
-    fetchNews().then(function(allNews) {
-        var relevant = allNews.filter(function(n) { return isRelevant(n.title, n.description); });
-
-        if (relevant.length === 0) {
-            newsContainer.innerHTML = '<div style="text-align:center;color:#e04040;padding:20px;">Tidak ada berita relevan. Pakai Technical Only.</div>';
-            statusEl.textContent = '⚠ Tidak ada berita relevan';
-            statusEl.className = 'model-status fallback';
-            return;
+            }
         }
+    </script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        body {
+            background-color: #0a0a0a;
+            color: #e0e0e0;
+            font-family: 'Inter', sans-serif;
+        }
+        .glow-gold {
+            box-shadow: 0 0 25px rgba(245, 158, 11, 0.15);
+        }
+        .glow-green {
+            box-shadow: 0 0 25px rgba(34, 197, 94, 0.2);
+        }
+        .glow-red {
+            box-shadow: 0 0 25px rgba(239, 68, 68, 0.2);
+        }
+        .animate-pulse-fast {
+            animation: pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        }
+        /* Custom scrollbar */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #141414;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #333;
+            border-radius: 3px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #555;
+        }
+    </style>
+</head>
+<body class="min-h-screen pb-12">
 
-        var totalScore = 0;
-        var allReasons = [];
-        relevant.forEach(function(item) {
-            var result = scoreNews(item.title, item.description);
-            item.score = result.score;
-            totalScore += result.score;
-            allReasons = allReasons.concat(result.reasons);
-        });
+    <!-- Top Navigation Header -->
+    <header class="border-b border-cardborder bg-cardbg/80 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-3.5 flex flex-wrap justify-between items-center gap-4">
+            <div class="flex items-center space-x-3">
+                <div class="p-2 bg-gold/10 rounded-xl border border-gold/30 text-gold">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                    </svg>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                        XAUUSD <span class="text-xs px-2 py-0.5 rounded-full bg-gold/20 text-gold font-semibold border border-gold/30">GOLD ANALYST</span>
+                    </h1>
+                    <p class="text-xs text-gray-400">Real-time Technical & Market Intelligence</p>
+                </div>
+            </div>
 
-        var avgScore = totalScore / relevant.length;
-        var techResult = calculateTechnicalSignal();
-        var combinedScore = (techResult.score * 0.6) + (avgScore * 0.4);
+            <!-- Global Controls -->
+            <div class="flex items-center flex-wrap gap-3">
+                <!-- Mode Toggle -->
+                <div class="bg-black/40 p-1 rounded-xl border border-cardborder flex items-center">
+                    <button id="btnModeTech" onclick="setAnalysisMode('tech')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-white bg-cardborder shadow-sm">
+                        Technical Only
+                    </button>
+                    <button id="btnModeNews" onclick="setAnalysisMode('news')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-gray-400 hover:text-white">
+                        Technical + News
+                    </button>
+                </div>
 
-        var signal, confidence;
-        if (combinedScore >= 3) { signal = 'BUY'; confidence = Math.min(50 + combinedScore * 10, 92); }
-        else if (combinedScore <= -3) { signal = 'SELL'; confidence = Math.min(50 + Math.abs(combinedScore) * 10, 92); }
-        else if (combinedScore > 1) { signal = 'WEAK BUY'; confidence = 40 + combinedScore * 10; }
-        else if (combinedScore < -1) { signal = 'WEAK SELL'; confidence = 40 + Math.abs(combinedScore) * 10; }
-        else { signal = 'NEUTRAL'; confidence = 60; }
+                <!-- Auto Refresh Toggle -->
+                <button id="btnAutoRefresh" onclick="toggleAutoRefresh()" class="px-3 py-1.5 text-xs font-medium rounded-xl border border-cardborder bg-cardbg text-gray-300 hover:text-white flex items-center gap-2 transition">
+                    <span id="autoRefreshDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+                    <span id="autoRefreshText">Auto (30s)</span>
+                </button>
 
-        var combinedResult = {
-            signal: signal,
-            confidence: Math.round(confidence),
-            reasons: techResult.reasons.concat(allReasons.slice(0, 5)),
-            score: combinedScore
+                <!-- Refresh Button -->
+                <button onclick="fetchMarketData()" class="p-2 rounded-xl border border-cardborder bg-cardbg text-gray-300 hover:text-white hover:border-gold/50 transition">
+                    <svg id="refreshIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 mt-6 space-y-6">
+
+        <!-- Status & Banner Notification -->
+        <div id="statusNotification" class="hidden p-3.5 rounded-xl border text-xs font-medium flex items-center justify-between transition-all">
+            <div class="flex items-center gap-2">
+                <span id="statusIcon"></span>
+                <span id="statusMessage">Initializing market analysis engine...</span>
+            </div>
+            <button onclick="dismissNotification()" class="text-gray-400 hover:text-white">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+            </button>
+        </div>
+
+        <!-- Live Price & Bias Top Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Price Summary Card -->
+            <div class="bg-cardbg border border-cardborder rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <span class="text-xs uppercase font-bold tracking-wider text-gray-400">XAUUSD Live Spot</span>
+                        <div class="flex items-baseline gap-2 mt-1">
+                            <span id="livePrice" class="text-3xl font-extrabold text-white tracking-tight">$0.00</span>
+                            <span id="priceCurrency" class="text-xs text-gray-400 font-semibold">USD/oz</span>
+                        </div>
+                    </div>
+                    <div id="sourceBadge" class="text-[10px] uppercase font-bold px-2.5 py-1 rounded-md bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                        Connecting...
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-cardborder/60 flex items-center justify-between">
+                    <div>
+                        <span class="text-xs text-gray-400 block">24h Change</span>
+                        <span id="priceChange24h" class="text-sm font-bold text-gray-300">0.00 (0.00%)</span>
+                    </div>
+                    <div>
+                        <span class="text-xs text-gray-400 block text-right">Daily Bias</span>
+                        <span id="dailyBias" class="text-sm font-bold text-gray-300 flex items-center gap-1 justify-end">
+                            --
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Main Signal Callout Banner (Spans 2 cols on lg) -->
+            <div id="signalCard" class="bg-cardbg border border-cardborder rounded-2xl p-5 lg:col-span-2 flex flex-col sm:flex-row justify-between items-center gap-6 transition-all duration-300">
+                <div class="space-y-2 text-center sm:text-left w-full sm:w-auto">
+                    <div class="flex items-center justify-center sm:justify-start gap-2">
+                        <span class="text-xs uppercase font-bold text-gray-400 tracking-wider">Composite Analysis Signal</span>
+                        <span id="activeModeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700">TECHNICAL ONLY</span>
+                    </div>
+                    <div class="flex items-center justify-center sm:justify-start gap-3">
+                        <span id="signalMain" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-300">
+                            ANALYZING...
+                        </span>
+                        <div id="confidencePill" class="hidden px-3 py-1 rounded-full text-xs font-bold bg-black/40 border border-white/10 text-gray-200">
+                            Confidence: <span id="confidenceVal">0%</span>
+                        </div>
+                    </div>
+                    <p id="signalSummaryText" class="text-xs text-gray-400 max-w-xl">
+                        Fetching live data feed to calculate technical momentum and pivot levels...
+                    </p>
+                </div>
+
+                <div class="flex flex-col items-center justify-center border-t sm:border-t-0 sm:border-l border-cardborder/80 pt-4 sm:pt-0 sm:pl-6 min-w-[150px] w-full sm:w-auto">
+                    <span class="text-xs text-gray-400 mb-1 font-medium">Signal Score</span>
+                    <div class="relative w-20 h-20 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-gray-800" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path id="scoreCircle" class="text-gold transition-all duration-1000 ease-out" stroke-dasharray="0, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <span id="scoreVal" class="absolute text-base font-bold text-white">0</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actionable Trade Setup Cards -->
+        <div>
+            <h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
+                <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                Calculated Trade Plan
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <!-- Entry Level Card -->
+                <div class="bg-cardbg border border-blue-500/30 rounded-xl p-4 bg-gradient-to-b from-blue-500/5 to-transparent relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold uppercase text-blue-400 tracking-wider">Suggested Entry</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold">BUY / SELL</span>
+                    </div>
+                    <div id="tradeEntry" class="text-2xl font-bold text-white mt-1">$0.00</div>
+                    <p id="entryNote" class="text-[11px] text-gray-400 mt-2">Optimal level based on price action.</p>
+                </div>
+
+                <!-- Stop Loss Card -->
+                <div class="bg-cardbg border border-red-500/30 rounded-xl p-4 bg-gradient-to-b from-red-500/5 to-transparent relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold uppercase text-red-400 tracking-wider">Stop Loss (SL)</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 font-semibold">Risk Level</span>
+                    </div>
+                    <div id="tradeSL" class="text-2xl font-bold text-red-400 mt-1">$0.00</div>
+                    <p id="slNote" class="text-[11px] text-gray-400 mt-2">Calculated at 1.5x ATR protection buffer.</p>
+                </div>
+
+                <!-- Take Profit Card -->
+                <div class="bg-cardbg border border-emerald-500/30 rounded-xl p-4 bg-gradient-to-b from-emerald-500/5 to-transparent relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold uppercase text-emerald-400 tracking-wider">Take Profit (TP1 / TP2)</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">Target</span>
+                    </div>
+                    <div id="tradeTP" class="text-2xl font-bold text-emerald-400 mt-1">$0.00</div>
+                    <p id="tpNote" class="text-[11px] text-gray-400 mt-2">TP1: -- | TP2: --</p>
+                </div>
+
+                <!-- Risk / Reward Ratio Card -->
+                <div class="bg-cardbg border border-amber-500/30 rounded-xl p-4 bg-gradient-to-b from-amber-500/5 to-transparent relative overflow-hidden">
+                    <div class="flex justify-between items-center mb-1">
+                        <span class="text-xs font-bold uppercase text-amber-400 tracking-wider">Risk / Reward Ratio</span>
+                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">RRR</span>
+                    </div>
+                    <div id="tradeRRR" class="text-2xl font-bold text-amber-400 mt-1">1 : 0.00</div>
+                    <p id="rrrQuality" class="text-[11px] text-gray-400 mt-2">Efficiency Rating: --</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Dashboard Content Grid: Technical Breakdown & Pivot Points -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            
+            <!-- Left Column: Pivot Points & Derived Levels -->
+            <div class="bg-cardbg border border-cardborder rounded-2xl p-5 space-y-4">
+                <div class="flex justify-between items-center border-b border-cardborder pb-3">
+                    <h3 class="font-bold text-white text-base flex items-center gap-2">
+                        <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
+                        Classic Pivot Points
+                    </h3>
+                    <span class="text-[10px] text-gray-400 font-mono">Daily Derive</span>
+                </div>
+
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm text-left">
+                        <thead>
+                            <tr class="text-[11px] text-gray-500 uppercase border-b border-cardborder/50">
+                                <th class="pb-2 font-semibold">Level</th>
+                                <th class="pb-2 text-right font-semibold">Price ($)</th>
+                                <th class="pb-2 text-right font-semibold">Distance</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-cardborder/30 font-mono text-xs">
+                            <tr class="hover:bg-white/5 transition">
+                                <td class="py-2.5 text-red-400 font-bold">Resistance 2 (R2)</td>
+                                <td id="pivotR2" class="text-right text-gray-200">$0.00</td>
+                                <td id="distR2" class="text-right text-gray-500">--</td>
+                            </tr>
+                            <tr class="hover:bg-white/5 transition">
+                                <td class="py-2.5 text-red-300 font-medium">Resistance 1 (R1)</td>
+                                <td id="pivotR1" class="text-right text-gray-200">$0.00</td>
+                                <td id="distR1" class="text-right text-gray-500">--</td>
+                            </tr>
+                            <tr class="bg-gold/10 font-bold hover:bg-gold/15 transition">
+                                <td class="py-2.5 text-gold">Pivot Point (PP)</td>
+                                <td id="pivotPP" class="text-right text-gold">$0.00</td>
+                                <td id="distPP" class="text-right text-gold">--</td>
+                            </tr>
+                            <tr class="hover:bg-white/5 transition">
+                                <td class="py-2.5 text-emerald-300 font-medium">Support 1 (S1)</td>
+                                <td id="pivotS1" class="text-right text-gray-200">$0.00</td>
+                                <td id="distS1" class="text-right text-gray-500">--</td>
+                            </tr>
+                            <tr class="hover:bg-white/5 transition">
+                                <td class="py-2.5 text-emerald-400 font-bold">Support 2 (S2)</td>
+                                <td id="pivotS2" class="text-right text-gray-200">$0.00</td>
+                                <td id="distS2" class="text-right text-gray-500">--</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div class="pt-3 border-t border-cardborder text-[11px] text-gray-400 space-y-1">
+                    <div class="flex justify-between">
+                        <span>Derived High (H):</span>
+                        <span id="derivedHigh" class="text-gray-200 font-mono">$0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Derived Low (L):</span>
+                        <span id="derivedLow" class="text-gray-200 font-mono">$0.00</span>
+                    </div>
+                    <div class="flex justify-between">
+                        <span>Daily Range (H-L):</span>
+                        <span id="derivedRange" class="text-gray-200 font-mono">$0.00</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Middle Column: Analysis Factors & Checklist -->
+            <div class="bg-cardbg border border-cardborder rounded-2xl p-5 space-y-4 lg:col-span-2 flex flex-col justify-between">
+                <div>
+                    <div class="flex justify-between items-center border-b border-cardborder pb-3 mb-4">
+                        <h3 class="font-bold text-white text-base flex items-center gap-2">
+                            <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                            Analysis Rationale & Factors
+                        </h3>
+                        <span class="text-xs text-gray-400">Weighted Matrix</span>
+                    </div>
+
+                    <div id="analysisFactorsList" class="space-y-3 text-xs">
+                        <div class="p-3 rounded-xl bg-black/40 border border-cardborder text-gray-400">
+                            Loading factor checklist...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Price Trigger Banner -->
+                <div class="p-3 bg-black/40 rounded-xl border border-cardborder flex items-center justify-between mt-4">
+                    <div class="flex items-center gap-2 text-xs text-gray-400">
+                        <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
+                        <span>API issue or custom price testing?</span>
+                    </div>
+                    <button onclick="openManualPriceModal()" class="px-3 py-1 text-xs font-semibold rounded-lg bg-gold/20 text-gold border border-gold/40 hover:bg-gold/30 transition">
+                        Input Price Manually
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Bottom Row: News Intelligence Feed (Active in News Mode) -->
+        <div id="newsSection" class="bg-cardbg border border-cardborder rounded-2xl p-5 space-y-4">
+            <div class="flex flex-wrap justify-between items-center gap-2 border-b border-cardborder pb-3">
+                <div class="flex items-center gap-2">
+                    <h3 class="font-bold text-white text-base flex items-center gap-2">
+                        <svg class="w-4 h-4 text-purple-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+                        Market Intelligence & Macro News
+                    </h3>
+                    <span id="newsStatusBadge" class="text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30">
+                        RSS FEED ACTIVE
+                    </span>
+                </div>
+                <span id="newsScoreSummary" class="text-xs text-gray-400 font-mono">
+                    Net Sentiment Score: 0 (Neutral)
+                </span>
+            </div>
+
+            <div id="newsContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="p-4 rounded-xl bg-black/40 border border-cardborder text-xs text-gray-400 text-center col-span-3">
+                    News analysis disabled. Switch to "Technical + News" mode to fetch geopolitical & macro signals.
+                </div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- Manual Price Entry Modal -->
+    <div id="manualPriceModal" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 hidden flex items-center justify-center p-4">
+        <div class="bg-cardbg border border-cardborder rounded-2xl max-w-md w-full p-6 space-y-5 shadow-2xl relative">
+            <div class="flex justify-between items-center border-b border-cardborder pb-3">
+                <h3 class="text-lg font-bold text-white flex items-center gap-2">
+                    <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    Manual Price Override
+                </h3>
+                <button onclick="closeManualPriceModal()" class="text-gray-400 hover:text-white">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+            </div>
+
+            <p class="text-xs text-gray-400">
+                Enter spot XAUUSD price and 24h change percentage manually if APIs are blocked or offline.
+            </p>
+
+            <form id="manualPriceForm" onsubmit="handleManualSubmit(event)" class="space-y-4">
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">XAUUSD Spot Price ($)</label>
+                    <input type="number" step="0.01" min="500" max="10000" id="inputManualPrice" placeholder="e.g. 2900.50" required
+                        class="w-full bg-black/60 border border-cardborder rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-gold font-mono text-sm">
+                </div>
+
+                <div>
+                    <label class="block text-xs font-semibold text-gray-300 mb-1">24h Change (%)</label>
+                    <input type="number" step="0.01" min="-20" max="20" id="inputManualChange" placeholder="e.g. +0.45 or -0.80" value="0.25" required
+                        class="w-full bg-black/60 border border-cardborder rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-gold font-mono text-sm">
+                </div>
+
+                <div class="pt-2 flex gap-3">
+                    <button type="button" onclick="closeManualPriceModal()" class="w-1/2 py-2.5 rounded-xl border border-cardborder text-xs font-semibold text-gray-300 hover:bg-white/5 transition">
+                        Cancel
+                    </button>
+                    <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-gold text-black font-bold text-xs hover:bg-goldlight transition shadow-lg shadow-gold/20">
+                        Apply Custom Price
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        /* State Variables */
+        const state = {
+            mode: 'tech', // 'tech' or 'news'
+            autoRefresh: true,
+            refreshInterval: null,
+            currentPrice: 0,
+            change24h: 0,
+            sourceLabel: 'Initial',
+            newsArticles: [],
+            newsScore: 0,
+            analysisResult: null,
+            isLoading: false
         };
 
-        displaySignal(combinedResult, 'Sinyal Teknikal + News');
-        calculateTradeLevels(combinedResult);
+        /* API Endpoints and Fallback Hierarchy */
+        const API_TIMEOUT_MS = 5000;
 
-        newsContainer.innerHTML = relevant.slice(0, 15).map(function(item) {
-            var s = item.score;
-            var label = s > 1 ? 'BULLISH' : s < -1 ? 'BEARISH' : 'NEUTRAL';
-            var cls = s > 1 ? 'positive' : s < -1 ? 'negative' : 'neutral';
-            return '<div class="news-item"><div class="news-title">' + item.title + '</div><div class="news-meta"><span class="sentiment-badge ' + cls + '">' + label + '</span><span>Skor: ' + (s > 0 ? '+' : '') + s.toFixed(1) + '</span><span>· ' + item.source + '</span></div></div>';
-        }).join('');
+        /* Keyword dictionaries for sentiment analysis */
+        const BULLISH_KEYWORDS = [
+            'cut', 'rate cut', 'dovish', 'fed cuts', 'inflation high', 'cpi rise',
+            'weak dollar', 'dollar falls', 'war', 'conflict', 'geopolitical', 'uncertainty',
+            'rally', 'surge', 'safe-haven', 'gold rises', 'bullish', 'crisis', 'tension', 'gold jumps'
+        ];
 
-        statusEl.textContent = '✓ Analisis gabungan selesai (' + relevant.length + ' berita)';
-        statusEl.className = 'model-status ready';
-    });
-}
+        const BEARISH_KEYWORDS = [
+            'hike', 'rate hike', 'hawkish', 'fed holds', 'strong dollar', 'dollar surges',
+            'yields rise', 'treasury yields', 'fed firm', 'gold drops', 'gold falls',
+            'bearish', 'selloff', 'easing inflation', 'peace', 'de-escalation'
+        ];
 
-// ===== REFRESH =====
-function runAnalysis() {
-    if (currentMode === 'technical') {
-        if (currentPrice) {
-            runTechnicalAnalysis();
-            document.getElementById('modelStatus').textContent = '✓ Analisis teknikal selesai';
-            document.getElementById('modelStatus').className = 'model-status ready';
-        } else {
-            fetchPrice();
+        async function fetchWithTimeout(resource, options = {}) {
+            const controller = new AbortController();
+            const id = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
+            try {
+                const response = await fetch(resource, {
+                    ...options,
+                    signal: controller.signal
+                });
+                clearTimeout(id);
+                return response;
+            } catch (err) {
+                clearTimeout(id);
+                throw err;
+            }
         }
-    } else {
-        if (!currentPrice) {
-            fetchPrice().then(function() { runCombinedAnalysis(); });
-        } else {
-            runCombinedAnalysis();
+
+        async function fetchMarketData() {
+            if (state.isLoading) return;
+            state.isLoading = true;
+            showLoadingUI(true);
+            showNotification('info', 'Fetching latest market rates & technical indicators...');
+
+            let priceFetched = false;
+
+            // Primary API: Gold-API
+            try {
+                console.log('Fetching Primary Gold API...');
+                const res = await fetchWithTimeout('https://api.gold-api.com/price/XAU');
+                if (!res.ok) throw new Error('Primary API HTTP Error');
+                const data = await res.json();
+                if (data && (data.price || data.price_gram_24k)) {
+                    state.currentPrice = parseFloat(data.price || data.price_gram_24k);
+                    state.change24h = parseFloat(data.chp || data.change_percent || 0.35);
+                    state.sourceLabel = 'Gold-API (Live Spot)';
+                    priceFetched = true;
+                }
+            } catch (err) {
+                console.warn('Primary Gold API failed, attempting Fallback 1 (CoinGecko PAXG)...', err);
+            }
+
+            // Fallback 1: CoinGecko PAXG Proxy
+            if (!priceFetched) {
+                try {
+                    const res = await fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd&include_24hr_change=true');
+                    if (!res.ok) throw new Error('CoinGecko HTTP Error');
+                    const data = await res.json();
+                    if (data && data['pax-gold']) {
+                        state.currentPrice = parseFloat(data['pax-gold'].usd);
+                        state.change24h = parseFloat(data['pax-gold'].usd_24h_change || 0);
+                        state.sourceLabel = 'CoinGecko PAXG (Gold Proxy)';
+                        priceFetched = true;
+                    }
+                } catch (err) {
+                    console.warn('Fallback 1 PAXG failed...', err);
+                }
+            }
+
+            // Fallback 2: Manual Input fallback warning if no price
+            if (!priceFetched && state.currentPrice === 0) {
+                showNotification('error', 'Automatic price fetch failed. Please enter manual price.');
+                openManualPriceModal();
+                showLoadingUI(false);
+                state.isLoading = false;
+                return;
+            } else if (!priceFetched && state.currentPrice > 0) {
+                // Kept previous manual / fetched price
+                state.sourceLabel = 'Manual / Cached Price';
+            }
+
+            // Fetch News if mode is 'news'
+            if (state.mode === 'news') {
+                await fetchNewsData();
+            }
+
+            runAnalysis();
+            showLoadingUI(false);
+            state.isLoading = false;
+            showNotification('success', `Data updated successfully via ${state.sourceLabel}`);
         }
-    }
-}
 
-// ===== EVENT LISTENERS =====
-document.addEventListener('DOMContentLoaded', function() {
-    // Mode toggle
-    document.getElementById('btnTechnical').addEventListener('click', function() {
-        currentMode = 'technical';
-        this.classList.add('active');
-        document.getElementById('btnCombined').classList.remove('active');
-        if (currentPrice) runTechnicalAnalysis();
-        document.getElementById('modelStatus').textContent = currentPrice ? '✓ Mode teknikal' : 'Memuat harga...';
-        document.getElementById('modelStatus').className = 'model-status ready';
-    });
+        function runAnalysis() {
+            const P = state.currentPrice;
+            const change = state.change24h;
 
-    document.getElementById('btnCombined').addEventListener('click', function() {
-        currentMode = 'combined';
-        this.classList.add('active');
-        document.getElementById('btnTechnical').classList.remove('active');
-        if (!currentPrice) {
-            fetchPrice().then(function() { runCombinedAnalysis(); });
-        } else {
-            runCombinedAnalysis();
+            if (!P || P <= 0) return;
+
+            // Derived High, Low, Close
+            // Close = Current Spot Price
+            // Estimate daily volatility range (~1.2% base + absolute change)
+            const volRangePct = Math.max(0.012, Math.abs(change / 100) + 0.006);
+            const rangeAmount = P * volRangePct;
+
+            let high, low;
+            if (change >= 0) {
+                high = P + (rangeAmount * 0.3);
+                low = P - (rangeAmount * 0.7);
+            } else {
+                high = P + (rangeAmount * 0.7);
+                low = P - (rangeAmount * 0.3);
+            }
+
+            const close = P;
+
+            // Classic Pivot Points
+            const PP = (high + low + close) / 3;
+            const R1 = (2 * PP) - low;
+            const S1 = (2 * PP) - high;
+            const R2 = PP + (high - low);
+            const S2 = PP - (high - low);
+
+            // Technical Indicators & Scoring (-100 to +100)
+            let techScore = 0;
+            const factors = [];
+
+            // Factor 1: 24h Momentum
+            if (change > 0.8) {
+                techScore += 30;
+                factors.push({ name: '24h Momentum', score: '+30', text: `Strong bullish momentum (+${change.toFixed(2)}%)` });
+            } else if (change > 0.1) {
+                techScore += 15;
+                factors.push({ name: '24h Momentum', score: '+15', text: `Moderate bullish drift (+${change.toFixed(2)}%)` });
+            } else if (change < -0.8) {
+                techScore -= 30;
+                factors.push({ name: '24h Momentum', score: '-30', text: `Strong bearish selloff (${change.toFixed(2)}%)` });
+            } else if (change < -0.1) {
+                techScore -= 15;
+                factors.push({ name: '24h Momentum', score: '-15', text: `Moderate bearish bias (${change.toFixed(2)}%)` });
+            } else {
+                factors.push({ name: '24h Momentum', score: '0', text: 'Flat / Sideways momentum' });
+            }
+
+            // Factor 2: Position vs Pivot Point
+            if (P > R1) {
+                techScore += 25;
+                factors.push({ name: 'Pivot Position', score: '+25', text: 'Price trading above R1 Resistance level' });
+            } else if (P > PP) {
+                techScore += 15;
+                factors.push({ name: 'Pivot Position', score: '+15', text: 'Price trading above Central Pivot Point (PP)' });
+            } else if (P < S1) {
+                techScore -= 25;
+                factors.push({ name: 'Pivot Position', score: '-25', text: 'Price trading below S1 Support level' });
+            } else {
+                techScore -= 15;
+                factors.push({ name: 'Pivot Position', score: '-15', text: 'Price trading below Central Pivot Point (PP)' });
+            }
+
+            // Factor 3: Daily Range Location
+            const rangePctLocation = ((P - low) / (high - low)) * 100;
+            if (rangePctLocation > 70) {
+                techScore += 15;
+                factors.push({ name: 'Range Location', score: '+15', text: `Upper 30% of daily range (${rangePctLocation.toFixed(0)}%)` });
+            } else if (rangePctLocation < 30) {
+                techScore -= 15;
+                factors.push({ name: 'Range Location', score: '-15', text: `Lower 30% of daily range (${rangePctLocation.toFixed(0)}%)` });
+            } else {
+                factors.push({ name: 'Range Location', score: '0', text: `Mid-range price consolidation (${rangePctLocation.toFixed(0)}%)` });
+            }
+
+            // Final Composite Score calculation (60% Tech + 40% News if news mode active)
+            let finalScore = techScore;
+            if (state.mode === 'news') {
+                finalScore = (techScore * 0.6) + (state.newsScore * 0.4);
+                factors.push({
+                    name: 'News Sentiment (40%)',
+                    score: state.newsScore > 0 ? `+${state.newsScore.toFixed(0)}` : `${state.newsScore.toFixed(0)}`,
+                    text: `Macro news sentiment score: ${state.newsScore.toFixed(0)}`
+                });
+            }
+
+            // Signal Determination
+            let signal = 'NEUTRAL';
+            let signalColor = 'text-gray-300';
+            let signalBg = 'bg-gray-800';
+            let borderClass = 'border-cardborder';
+
+            if (finalScore >= 45) {
+                signal = 'STRONG BUY';
+                signalColor = 'text-emerald-400';
+                borderClass = 'border-emerald-500/50 glow-green';
+            } else if (finalScore >= 15) {
+                signal = 'WEAK BUY';
+                signalColor = 'text-emerald-300';
+                borderClass = 'border-emerald-500/30';
+            } else if (finalScore <= -45) {
+                signal = 'STRONG SELL';
+                signalColor = 'text-red-400';
+                borderClass = 'border-red-500/50 glow-red';
+            } else if (finalScore <= -15) {
+                signal = 'WEAK SELL';
+                signalColor = 'text-red-300';
+                borderClass = 'border-red-500/30';
+            }
+
+            // Confidence Level Calculation
+            const absScore = Math.abs(finalScore);
+            const confidence = Math.min(95, Math.max(55, Math.round(55 + (absScore * 0.4))));
+
+            // Trade Plan Setup (Entry, SL, TP, RRR)
+            const atrEst = P * 0.0075; // Approx 0.75% ATR approximation for gold
+            let entry, sl, tp1, tp2;
+
+            if (signal.includes('BUY')) {
+                entry = Math.min(P, PP + 1.0); // Buy near current or PP
+                sl = Math.min(S2, entry - (atrEst * 1.5));
+                tp1 = Math.max(R1, entry + (atrEst * 1.5));
+                tp2 = Math.max(R2, entry + (atrEst * 2.8));
+            } else if (signal.includes('SELL')) {
+                entry = Math.max(P, PP - 1.0); // Sell near current or PP
+                sl = Math.max(R2, entry + (atrEst * 1.5));
+                tp1 = Math.min(S1, entry - (atrEst * 1.5));
+                tp2 = Math.min(S2, entry - (atrEst * 2.8));
+            } else {
+                entry = P;
+                sl = P - (atrEst * 1.2);
+                tp1 = P + (atrEst * 1.2);
+                tp2 = P + (atrEst * 2.2);
+            }
+
+            const risk = Math.abs(entry - sl);
+            const reward = Math.abs(tp1 - entry);
+            const rrrVal = risk > 0 ? (reward / risk) : 1;
+
+            state.analysisResult = {
+                price: P,
+                change,
+                high,
+                low,
+                PP, R1, R2, S1, S2,
+                techScore,
+                finalScore,
+                confidence,
+                signal,
+                factors,
+                tradePlan: { entry, sl, tp1, tp2, rrr: rrrVal }
+            };
+
+            renderUI();
         }
-    });
 
-    // Refresh
-    document.getElementById('refreshBtn').addEventListener('click', runAnalysis);
+        async function fetchNewsData() {
+            try {
+                const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=gold+xauusd+fed+inflation&hl=en-US&gl=US&ceid=US:en');
+                const res = await fetchWithTimeout(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
+                if (!res.ok) throw new Error('RSS conversion failed');
+                const data = await res.json();
 
-    // Manual price
-    document.getElementById('btnManual').addEventListener('click', applyManualPrice);
+                if (data && data.items && data.items.length > 0) {
+                    state.newsArticles = data.items.slice(0, 6);
+                    calculateNewsSentiment();
+                    document.getElementById('newsStatusBadge').textContent = 'RSS FEED ACTIVE';
+                    document.getElementById('newsStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30';
+                } else {
+                    throw new Error('No items in news feed');
+                }
+            } catch (err) {
+                console.warn('News RSS fetch failed:', err);
+                document.getElementById('newsStatusBadge').textContent = 'NEWS FEED UNAVAILABLE';
+                document.getElementById('newsStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30';
+                state.newsArticles = [];
+                state.newsScore = 0;
+            }
+        }
 
-    // Initial fetch
-    fetchPrice();
-});
-</script>
+        function calculateNewsSentiment() {
+            let score = 0;
+            state.newsArticles.forEach(item => {
+                const text = (item.title + " " + (item.description || "")).toLowerCase();
+                let itemScore = 0;
+
+                BULLISH_KEYWORDS.forEach(kw => {
+                    if (text.includes(kw)) itemScore += 12;
+                });
+                BEARISH_KEYWORDS.forEach(kw => {
+                    if (text.includes(kw)) itemScore -= 12;
+                });
+
+                item.sentiment = itemScore > 0 ? 'BULLISH' : (itemScore < 0 ? 'BEARISH' : 'NEUTRAL');
+                item.score = itemScore;
+                score += itemScore;
+            });
+
+            // Clamp sentiment score between -100 and +100
+            state.newsScore = Math.max(-100, Math.min(100, score));
+        }
+
+        function renderUI() {
+            const res = state.analysisResult;
+            if (!res) return;
+
+            // Header & Source
+            document.getElementById('livePrice').textContent = `$${res.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+            
+            const changeElem = document.getElementById('priceChange24h');
+            const sign = res.change >= 0 ? '+' : '';
+            changeElem.textContent = `${sign}${res.change.toFixed(2)}%`;
+            changeElem.className = `text-sm font-bold ${res.change >= 0 ? 'text-emerald-400' : 'text-red-400'}`;
+
+            document.getElementById('sourceBadge').textContent = state.sourceLabel;
+
+            // Daily Bias
+            const biasElem = document.getElementById('dailyBias');
+            if (res.change > 0.2) {
+                biasElem.innerHTML = `<span class="text-emerald-400">BULLISH 🟢</span>`;
+            } else if (res.change < -0.2) {
+                biasElem.innerHTML = `<span class="text-red-400">BEARISH 🔴</span>`;
+            } else {
+                biasElem.innerHTML = `<span class="text-amber-400">SIDEWAYS 🟡</span>`;
+            }
+
+            // Active Mode Badge
+            document.getElementById('activeModeBadge').textContent = state.mode === 'tech' ? 'TECHNICAL ONLY' : 'TECHNICAL + NEWS (60/40)';
+
+            // Signal Main Banner
+            const sigElem = document.getElementById('signalMain');
+            sigElem.textContent = res.signal;
+            
+            const card = document.getElementById('signalCard');
+            card.className = "bg-cardbg border rounded-2xl p-5 lg:col-span-2 flex flex-col sm:flex-row justify-between items-center gap-6 transition-all duration-300 ";
+
+            if (res.signal.includes('BUY')) {
+                sigElem.className = 'text-3xl sm:text-4xl font-extrabold tracking-tight text-emerald-400';
+                card.className += 'border-emerald-500/40 glow-green';
+            } else if (res.signal.includes('SELL')) {
+                sigElem.className = 'text-3xl sm:text-4xl font-extrabold tracking-tight text-red-400';
+                card.className += 'border-red-500/40 glow-red';
+            } else {
+                sigElem.className = 'text-3xl sm:text-4xl font-extrabold tracking-tight text-amber-400';
+                card.className += 'border-cardborder';
+            }
+
+            // Confidence
+            document.getElementById('confidencePill').classList.remove('hidden');
+            document.getElementById('confidenceVal').textContent = `${res.confidence}%`;
+
+            // Score gauge & description
+            document.getElementById('scoreVal').textContent = Math.round(res.finalScore);
+            const circle = document.getElementById('scoreCircle');
+            const dashVal = Math.min(100, Math.max(0, (res.finalScore + 100) / 2));
+            circle.setAttribute('stroke-dasharray', `${dashVal}, 100`);
+
+            document.getElementById('signalSummaryText').textContent = 
+                `Composite evaluation indicates a ${res.signal} posture for XAUUSD with ${res.confidence}% algorithm confidence based on ${res.factors.length} active market metrics.`;
+
+            // Trade Plan Card Updates
+            const tp = res.tradePlan;
+            document.getElementById('tradeEntry').textContent = `$${tp.entry.toFixed(2)}`;
+            document.getElementById('tradeSL').textContent = `$${tp.sl.toFixed(2)}`;
+            document.getElementById('tradeTP').textContent = `$${tp.tp1.toFixed(2)}`;
+            document.getElementById('tpNote').textContent = `TP1: $${tp.tp1.toFixed(2)} | TP2: $${tp.tp2.toFixed(2)}`;
+            document.getElementById('tradeRRR').textContent = `1 : ${tp.rrr.toFixed(2)}`;
+            document.getElementById('rrrQuality').textContent = tp.rrr >= 2.0 ? 'Quality: Excellent (>1:2)' : (tp.rrr >= 1.4 ? 'Quality: Moderate' : 'Quality: Scalp / Conservative');
+
+            // Pivot Points Table
+            document.getElementById('pivotR2').textContent = `$${res.R2.toFixed(2)}`;
+            document.getElementById('pivotR1').textContent = `$${res.R1.toFixed(2)}`;
+            document.getElementById('pivotPP').textContent = `$${res.PP.toFixed(2)}`;
+            document.getElementById('pivotS1').textContent = `$${res.S1.toFixed(2)}`;
+            document.getElementById('pivotS2').textContent = `$${res.S2.toFixed(2)}`;
+
+            document.getElementById('distR2').textContent = `${(res.R2 - res.price).toFixed(1)} pts`;
+            document.getElementById('distR1').textContent = `${(res.R1 - res.price).toFixed(1)} pts`;
+            document.getElementById('distPP').textContent = `${(res.PP - res.price).toFixed(1)} pts`;
+            document.getElementById('distS1').textContent = `${(res.S1 - res.price).toFixed(1)} pts`;
+            document.getElementById('distS2').textContent = `${(res.S2 - res.price).toFixed(1)} pts`;
+
+            document.getElementById('derivedHigh').textContent = `$${res.high.toFixed(2)}`;
+            document.getElementById('derivedLow').textContent = `$${res.low.toFixed(2)}`;
+            document.getElementById('derivedRange').textContent = `$${(res.high - res.low).toFixed(2)}`;
+
+            // Render Factors Checklist
+            const factorsContainer = document.getElementById('analysisFactorsList');
+            factorsContainer.innerHTML = '';
+            res.factors.forEach(f => {
+                const scoreNum = parseFloat(f.score);
+                const badgeColor = scoreNum > 0 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : (scoreNum < 0 ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-gray-800 text-gray-400 border-gray-700');
+                
+                const div = document.createElement('div');
+                div.className = 'p-3 rounded-xl bg-black/40 border border-cardborder flex items-center justify-between gap-3';
+                div.innerHTML = `
+                    <div class="space-y-0.5">
+                        <span class="font-bold text-white text-xs block">${f.name}</span>
+                        <span class="text-gray-400 text-[11px]">${f.text}</span>
+                    </div>
+                    <span class="px-2.5 py-1 rounded-lg text-xs font-mono font-bold border ${badgeColor}">${f.score}</span>
+                `;
+                factorsContainer.appendChild(div);
+            });
+
+            // Render News Container if in news mode
+            renderNewsUI();
+        }
+
+        function renderNewsUI() {
+            const newsContainer = document.getElementById('newsContainer');
+            if (state.mode !== 'news') {
+                newsContainer.innerHTML = `
+                    <div class="p-4 rounded-xl bg-black/40 border border-cardborder text-xs text-gray-400 text-center col-span-3">
+                        News analysis disabled. Switch to "Technical + News" mode to fetch geopolitical & macro signals.
+                    </div>`;
+                document.getElementById('newsScoreSummary').textContent = 'Net Sentiment Score: N/A (Technical Mode)';
+                return;
+            }
+
+            document.getElementById('newsScoreSummary').textContent = `Net Sentiment Score: ${state.newsScore.toFixed(0)} (${state.newsScore > 0 ? 'Bullish Gold' : (state.newsScore < 0 ? 'Bearish Gold' : 'Neutral')})`;
+
+            if (state.newsArticles.length === 0) {
+                newsContainer.innerHTML = `
+                    <div class="p-4 rounded-xl bg-black/40 border border-cardborder text-xs text-gray-400 text-center col-span-3">
+                        No recent news feed items found or RSS request timed out. Fallback to Technical analysis active.
+                    </div>`;
+                return;
+            }
+
+            newsContainer.innerHTML = '';
+            state.newsArticles.forEach(item => {
+                const badgeColor = item.sentiment === 'BULLISH' ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : (item.sentiment === 'BEARISH' ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-gray-800 text-gray-400 border-gray-700');
+                
+                const card = document.createElement('div');
+                card.className = 'p-4 rounded-xl bg-black/40 border border-cardborder flex flex-col justify-between space-y-3 hover:border-purple-500/40 transition';
+                card.innerHTML = `
+                    <div class="space-y-1.5">
+                        <div class="flex justify-between items-start gap-2">
+                            <span class="text-[10px] font-bold px-2 py-0.5 rounded border ${badgeColor}">${item.sentiment}</span>
+                            <span class="text-[10px] text-gray-500">${new Date(item.pubDate || Date.now()).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+                        </div>
+                        <a href="${item.link}" target="_blank" class="font-semibold text-xs text-gray-200 hover:text-gold transition line-clamp-2">
+                            ${item.title}
+                        </a>
+                    </div>
+                    <div class="text-[10px] text-gray-500 flex justify-between items-center pt-2 border-t border-cardborder/40">
+                        <span>Source: Macro RSS</span>
+                        <span class="text-purple-400">Impact Score: ${item.score > 0 ? '+'+item.score : item.score}</span>
+                    </div>
+                `;
+                newsContainer.appendChild(card);
+            });
+        }
+
+        function setAnalysisMode(mode) {
+            state.mode = mode;
+            const btnTech = document.getElementById('btnModeTech');
+            const btnNews = document.getElementById('btnModeNews');
+
+            if (mode === 'tech') {
+                btnTech.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-white bg-cardborder shadow-sm';
+                btnNews.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-gray-400 hover:text-white';
+            } else {
+                btnNews.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-white bg-purple-600 shadow-sm';
+                btnTech.className = 'px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-gray-400 hover:text-white';
+            }
+
+            fetchMarketData();
+        }
+
+        function toggleAutoRefresh() {
+            state.autoRefresh = !state.autoRefresh;
+            const dot = document.getElementById('autoRefreshDot');
+            const text = document.getElementById('autoRefreshText');
+
+            if (state.autoRefresh) {
+                dot.className = 'w-2 h-2 rounded-full bg-emerald-500 animate-pulse';
+                text.textContent = 'Auto (30s)';
+                startAutoRefreshLoop();
+            } else {
+                dot.className = 'w-2 h-2 rounded-full bg-gray-600';
+                text.textContent = 'Auto (Off)';
+                if (state.refreshInterval) clearInterval(state.refreshInterval);
+            }
+        }
+
+        function startAutoRefreshLoop() {
+            if (state.refreshInterval) clearInterval(state.refreshInterval);
+            state.refreshInterval = setInterval(() => {
+                if (state.autoRefresh) {
+                    fetchMarketData();
+                }
+            }, 30000);
+        }
+
+        /* Manual Price Modal Helpers */
+        function openManualPriceModal() {
+            document.getElementById('manualPriceModal').classList.remove('hidden');
+            if (state.currentPrice > 0) {
+                document.getElementById('inputManualPrice').value = state.currentPrice.toFixed(2);
+                document.getElementById('inputManualChange').value = state.change24h.toFixed(2);
+            }
+        }
+
+        function closeManualPriceModal() {
+            document.getElementById('manualPriceModal').classList.add('hidden');
+        }
+
+        function handleManualSubmit(e) {
+            e.preventDefault();
+            const p = parseFloat(document.getElementById('inputManualPrice').value);
+            const c = parseFloat(document.getElementById('inputManualChange').value);
+
+            if (!isNaN(p) && p > 0) {
+                state.currentPrice = p;
+                state.change24h = isNaN(c) ? 0 : c;
+                state.sourceLabel = 'Manual User Override';
+                closeManualPriceModal();
+                runAnalysis();
+                showNotification('success', 'Manual price parameters applied.');
+            }
+        }
+
+        /* UI Feedback Helpers */
+        function showLoadingUI(loading) {
+            const icon = document.getElementById('refreshIcon');
+            if (loading) {
+                icon.classList.add('animate-spin');
+            } else {
+                icon.classList.remove('animate-spin');
+            }
+        }
+
+        function showNotification(type, message) {
+            const notif = document.getElementById('statusNotification');
+            const msg = document.getElementById('statusMessage');
+            const icon = document.getElementById('statusIcon');
+
+            notif.classList.remove('hidden', 'bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300', 'bg-red-500/10', 'border-red-500/30', 'text-red-300', 'bg-blue-500/10', 'border-blue-500/30', 'text-blue-300');
+
+            if (type === 'success') {
+                notif.classList.add('bg-emerald-500/10', 'border-emerald-500/30', 'text-emerald-300');
+                icon.innerHTML = '✅';
+            } else if (type === 'error') {
+                notif.classList.add('bg-red-500/10', 'border-red-500/30', 'text-red-300');
+                icon.innerHTML = '⚠️';
+            } else {
+                notif.classList.add('bg-blue-500/10', 'border-blue-500/30', 'text-blue-300');
+                icon.innerHTML = 'ℹ️';
+            }
+
+            msg.textContent = message;
+        }
+
+        function dismissNotification() {
+            document.getElementById('statusNotification').classList.add('hidden');
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchMarketData();
+            startAutoRefreshLoop();
+        });
+    </script>
 </body>
 </html>
