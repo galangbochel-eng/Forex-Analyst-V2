@@ -1,648 +1,759 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XAUUSD Market Analyst</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: #0a0a0a; color: #e0e0e0; min-height: 100vh; padding: 16px;
-        }
-        .container { max-width: 900px; margin: 0 auto; }
-        h1 { font-size: 24px; font-weight: 300; margin-bottom: 4px; color: #fff; }
-        .subtitle { font-size: 13px; color: #666; margin-bottom: 24px; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>XAUUSD Market Analyst</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    background: #0a0a0a; color: #e0e0e0; min-height: 100vh; padding: 16px;
+}
+.container { max-width: 900px; margin: 0 auto; }
+h1 { font-size: 24px; font-weight: 300; margin-bottom: 4px; color: #fff; }
+.subtitle { font-size: 13px; color: #666; margin-bottom: 24px; }
 
-        .mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
-        .mode-btn {
-            flex: 1; padding: 10px; background: #141414; border: 1px solid #222;
-            border-radius: 8px; color: #666; font-size: 13px; cursor: pointer;
-            font-family: inherit; transition: all 0.2s;
-        }
-        .mode-btn.active { background: #1a1a1a; border-color: #4488ff; color: #4488ff; }
+.mode-toggle { display: flex; gap: 8px; margin-bottom: 16px; }
+.mode-btn {
+    flex: 1; padding: 10px; background: #141414; border: 1px solid #222;
+    border-radius: 8px; color: #666; font-size: 13px; cursor: pointer;
+    font-family: inherit; transition: all 0.2s;
+}
+.mode-btn.active { background: #1a1a1a; border-color: #4488ff; color: #4488ff; }
 
-        .signal-box {
-            background: #141414; border: 2px solid #222; border-radius: 16px;
-            padding: 32px; text-align: center; margin-bottom: 16px; transition: all 0.3s;
-        }
-        .signal-box.buy { border-color: #30c060; background: #0f1a12; }
-        .signal-box.sell { border-color: #e04040; background: #1a0f0f; }
-        .signal-box.neutral { border-color: #666; background: #141414; }
-        .signal-label {
-            font-size: 12px; text-transform: uppercase; letter-spacing: 2px;
-            color: #666; margin-bottom: 12px;
-        }
-        .signal-value {
-            font-size: 72px; font-weight: 700; letter-spacing: -2px; margin-bottom: 8px;
-        }
-        .signal-value.buy { color: #30c060; }
-        .signal-value.sell { color: #e04040; }
-        .signal-value.neutral { color: #888; }
-        .signal-confidence { font-size: 16px; color: #888; }
-        .signal-reason {
-            font-size: 12px; color: #666; margin-top: 12px;
-            line-height: 1.5; text-align: left;
-        }
+.signal-box {
+    background: #141414; border: 2px solid #222; border-radius: 16px;
+    padding: 32px; text-align: center; margin-bottom: 16px; transition: all 0.3s;
+}
+.signal-box.buy { border-color: #30c060; background: #0f1a12; }
+.signal-box.sell { border-color: #e04040; background: #1a0f0f; }
+.signal-box.neutral { border-color: #666; background: #141414; }
+.signal-label {
+    font-size: 12px; text-transform: uppercase; letter-spacing: 2px;
+    color: #666; margin-bottom: 12px;
+}
+.signal-value {
+    font-size: 72px; font-weight: 700; letter-spacing: -2px; margin-bottom: 8px;
+}
+.signal-value.buy { color: #30c060; }
+.signal-value.sell { color: #e04040; }
+.signal-value.neutral { color: #888; }
+.signal-confidence { font-size: 16px; color: #888; }
+.signal-reason {
+    font-size: 12px; color: #666; margin-top: 12px;
+    line-height: 1.5; text-align: left;
+}
 
-        .model-status {
-            font-size: 12px; color: #666; text-align: center;
-            padding: 8px; margin-bottom: 16px;
-        }
-        .model-status.loading { color: #f0a030; }
-        .model-status.ready { color: #30c060; }
-        .model-status.fallback { color: #f0a030; }
-        .model-status.error { color: #e04040; }
+.model-status {
+    font-size: 12px; color: #666; text-align: center;
+    padding: 8px; margin-bottom: 16px;
+}
+.model-status.loading { color: #f0a030; }
+.model-status.ready { color: #30c060; }
+.model-status.fallback { color: #f0a030; }
+.model-status.error { color: #e04040; }
 
-        .card {
-            background: #141414; border: 1px solid #222; border-radius: 12px;
-            padding: 20px; margin-bottom: 16px;
-        }
-        .card-title {
-            font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
-            color: #555; margin-bottom: 12px;
-        }
+.card {
+    background: #141414; border: 1px solid #222; border-radius: 12px;
+    padding: 20px; margin-bottom: 16px;
+}
+.card-title {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: #555; margin-bottom: 12px;
+}
 
-        .trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-        @media (max-width: 600px) { .trade-grid { grid-template-columns: 1fr; } }
-        .trade-item {
-            background: #0d0d0d; border: 1px solid #2a2a2a;
-            border-radius: 8px; padding: 16px; text-align: center;
-        }
-        .trade-item.entry { border-color: #4488ff; }
-        .trade-item.sl { border-color: #e04040; }
-        .trade-item.tp { border-color: #30c060; }
-        .trade-item.rr { border-color: #f0a030; }
-        .trade-label {
-            font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
-            color: #666; margin-bottom: 8px;
-        }
-        .trade-value {
-            font-size: 28px; font-weight: 600; color: #fff;
-            font-variant-numeric: tabular-nums;
-        }
-        .trade-item.entry .trade-value { color: #4488ff; }
-        .trade-item.sl .trade-value { color: #e04040; }
-        .trade-item.tp .trade-value { color: #30c060; }
-        .trade-item.rr .trade-value { color: #f0a030; }
-        .trade-note { font-size: 10px; color: #555; margin-top: 6px; }
+.trade-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+@media (max-width: 600px) { .trade-grid { grid-template-columns: 1fr; } }
+.trade-item {
+    background: #0d0d0d; border: 1px solid #2a2a2a;
+    border-radius: 8px; padding: 16px; text-align: center;
+}
+.trade-item.entry { border-color: #4488ff; }
+.trade-item.sl { border-color: #e04040; }
+.trade-item.tp { border-color: #30c060; }
+.trade-item.rr { border-color: #f0a030; }
+.trade-label {
+    font-size: 11px; text-transform: uppercase; letter-spacing: 1px;
+    color: #666; margin-bottom: 8px;
+}
+.trade-value {
+    font-size: 28px; font-weight: 600; color: #fff;
+    font-variant-numeric: tabular-nums;
+}
+.trade-item.entry .trade-value { color: #4488ff; }
+.trade-item.sl .trade-value { color: #e04040; }
+.trade-item.tp .trade-value { color: #30c060; }
+.trade-item.rr .trade-value { color: #f0a030; }
+.trade-note { font-size: 10px; color: #555; margin-top: 6px; }
 
-        .levels-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
-        .level-item {
-            background: #0d0d0d; border: 1px solid #2a2a2a;
-            border-radius: 6px; padding: 10px; text-align: center;
-        }
-        .level-label {
-            font-size: 10px; text-transform: uppercase; color: #555; margin-bottom: 4px;
-        }
-        .level-value {
-            font-size: 14px; font-weight: 600; color: #e0e0e0;
-            font-variant-numeric: tabular-nums;
-        }
-        .level-item.r { border-color: #3a1a1a; }
-        .level-item.r .level-value { color: #e04040; }
-        .level-item.s { border-color: #1a3a1a; }
-        .level-item.s .level-value { color: #30c060; }
-        .level-item.pp { border-color: #2a2a3a; }
-        .level-item.pp .level-value { color: #8888ff; }
+.levels-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; }
+.level-item {
+    background: #0d0d0d; border: 1px solid #2a2a2a;
+    border-radius: 6px; padding: 10px; text-align: center;
+}
+.level-label {
+    font-size: 10px; text-transform: uppercase; color: #555; margin-bottom: 4px;
+}
+.level-value {
+    font-size: 14px; font-weight: 600; color: #e0e0e0;
+    font-variant-numeric: tabular-nums;
+}
+.level-item.r { border-color: #3a1a1a; }
+.level-item.r .level-value { color: #e04040; }
+.level-item.s { border-color: #1a3a1a; }
+.level-item.s .level-value { color: #30c060; }
+.level-item.pp { border-color: #2a2a3a; }
+.level-item.pp .level-value { color: #8888ff; }
 
-        .news-list { max-height: 400px; overflow-y: auto; }
-        .news-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
-        .news-item:last-child { border-bottom: none; }
-        .news-title { font-size: 12px; color: #ccc; margin-bottom: 4px; line-height: 1.4; }
-        .news-meta {
-            font-size: 10px; color: #555; display: flex;
-            gap: 8px; align-items: center; flex-wrap: wrap;
-        }
-        .sentiment-badge {
-            display: inline-block; padding: 1px 6px; border-radius: 3px;
-            font-size: 9px; font-weight: 600; text-transform: uppercase;
-        }
-        .sentiment-badge.positive { background: #1a3a1a; color: #30c060; }
-        .sentiment-badge.negative { background: #3a1a1a; color: #e04040; }
-        .sentiment-badge.neutral { background: #2a2a2a; color: #888; }
+.news-list { max-height: 400px; overflow-y: auto; }
+.news-item { padding: 10px 0; border-bottom: 1px solid #1a1a1a; }
+.news-item:last-child { border-bottom: none; }
+.news-title { font-size: 12px; color: #ccc; margin-bottom: 4px; line-height: 1.4; }
+.news-meta {
+    font-size: 10px; color: #555; display: flex;
+    gap: 8px; align-items: center; flex-wrap: wrap;
+}
+.sentiment-badge {
+    display: inline-block; padding: 1px 6px; border-radius: 3px;
+    font-size: 9px; font-weight: 600; text-transform: uppercase;
+}
+.sentiment-badge.positive { background: #1a3a1a; color: #30c060; }
+.sentiment-badge.negative { background: #3a1a1a; color: #e04040; }
+.sentiment-badge.neutral { background: #2a2a2a; color: #888; }
 
-        .btn {
-            width: 100%; padding: 12px; background: #fff; color: #0a0a0a;
-            border: none; border-radius: 8px; font-size: 14px; font-weight: 500;
-            cursor: pointer; font-family: inherit;
-        }
-        .btn:hover { background: #e0e0e0; }
-        .btn:disabled { background: #333; color: #666; cursor: not-allowed; }
-        .btn-secondary {
-            background: #1a1a1a; color: #e0e0e0; border: 1px solid #2a2a2a;
-            margin-top: 8px;
-        }
-        .btn-secondary:hover { background: #2a2a2a; }
+.btn {
+    width: 100%; padding: 12px; background: #fff; color: #0a0a0a;
+    border: none; border-radius: 8px; font-size: 14px; font-weight: 500;
+    cursor: pointer; font-family: inherit;
+}
+.btn:hover { background: #e0e0e0; }
+.btn:disabled { background: #333; color: #666; cursor: not-allowed; }
+.btn-secondary {
+    background: #1a1a1a; color: #e0e0e0; border: 1px solid #2a2a2a;
+    margin-top: 8px;
+}
+.btn-secondary:hover { background: #2a2a2a; }
 
-        .disclaimer {
-            font-size: 11px; color: #444; text-align: center;
-            margin-top: 24px; line-height: 1.5;
-        }
+.disclaimer {
+    font-size: 11px; color: #444; text-align: center;
+    margin-top: 24px; line-height: 1.5;
+}
 
-        .loading-spinner {
-            display: inline-block; width: 14px; height: 14px;
-            border: 2px solid #333; border-top-color: #f0a030;
-            border-radius: 50%; animation: spin 0.8s linear infinite;
-            margin-right: 8px; vertical-align: middle;
-        }
-        @keyframes spin { to { transform: rotate(360deg); } }
+.loading-spinner {
+    display: inline-block; width: 14px; height: 14px;
+    border: 2px solid #333; border-top-color: #f0a030;
+    border-radius: 50%; animation: spin 0.8s linear infinite;
+    margin-right: 8px; vertical-align: middle;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
 
-        .price-row {
-            display: flex; justify-content: space-between;
-            padding: 6px 0; font-size: 13px;
-        }
-        .price-label { color: #888; }
-        .price-value { color: #e0e0e0; font-weight: 500; }
-        .price-value.up { color: #30c060; }
-        .price-value.down { color: #e04040; }
+.price-row {
+    display: flex; justify-content: space-between;
+    padding: 6px 0; font-size: 13px;
+}
+.price-label { color: #888; }
+.price-value { color: #e0e0e0; font-weight: 500; }
+.price-value.up { color: #30c060; }
+.price-value.down { color: #e04040; }
 
-        .manual-input {
-            display: none; margin-top: 12px; padding-top: 12px;
-            border-top: 1px solid #222;
-        }
-        .manual-input.show { display: block; }
-        .manual-input input {
-            width: 100%; padding: 10px; background: #0d0d0d;
-            border: 1px solid #2a2a2a; border-radius: 6px;
-            color: #e0e0e0; font-size: 14px; font-family: inherit;
-            margin-bottom: 8px;
-        }
-        .manual-input input:focus { outline: none; border-color: #4488ff; }
-        .manual-input label {
-            font-size: 11px; color: #888; display: block; margin-bottom: 4px;
-        }
-    </style>
+.manual-input {
+    display: none; margin-top: 12px; padding-top: 12px;
+    border-top: 1px solid #222;
+}
+.manual-input.show { display: block; }
+.manual-input input {
+    width: 100%; padding: 10px; background: #0d0d0d;
+    border: 1px solid #2a2a2a; border-radius: 6px;
+    color: #e0e0e0; font-size: 14px; font-family: inherit;
+    margin-bottom: 8px;
+}
+.manual-input input:focus { outline: none; border-color: #4488ff; }
+.manual-input label {
+    font-size: 11px; color: #888; display: block; margin-bottom: 4px;
+}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>XAUUSD Market Analyst</h1>
-        <p class="subtitle">Live Price · Entry Level · SL · TP</p>
+<div class="container">
+    <h1>XAUUSD Market Analyst</h1>
+    <p class="subtitle">Live Price · Entry Level · SL · TP</p>
 
-        <div class="mode-toggle">
-            <button class="mode-btn active" data-mode="technical">Technical Only</button>
-            <button class="mode-btn" data-mode="combined">Technical + News</button>
-        </div>
-
-        <div id="modelStatus" class="model-status loading">
-            <span class="loading-spinner"></span>Memuat harga...
-        </div>
-
-        <div id="signalBox" class="signal-box neutral">
-            <div class="signal-label" id="signalLabel">Sinyal Teknikal</div>
-            <div id="signalValue" class="signal-value neutral">—</div>
-            <div id="signalConfidence" class="signal-confidence">Menunggu analisis...</div>
-            <div id="signalReason" class="signal-reason"></div>
-        </div>
-
-        <div class="card" id="tradeCard" style="display:none;">
-            <div class="card-title">Entry Level</div>
-            <div class="trade-grid">
-                <div class="trade-item entry">
-                    <div class="trade-label">Entry</div>
-                    <div class="trade-value" id="entryLevel">—</div>
-                    <div class="trade-note" id="entryNote"></div>
-                </div>
-                <div class="trade-item sl">
-                    <div class="trade-label">Stop Loss</div>
-                    <div class="trade-value" id="slLevel">—</div>
-                    <div class="trade-note" id="slNote"></div>
-                </div>
-                <div class="trade-item tp">
-                    <div class="trade-label">Take Profit</div>
-                    <div class="trade-value" id="tpLevel">—</div>
-                    <div class="trade-note" id="tpNote"></div>
-                </div>
-                <div class="trade-item rr">
-                    <div class="trade-label">Risk / Reward</div>
-                    <div class="trade-value" id="rrValue">—</div>
-                    <div class="trade-note" id="rrNote"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">Harga XAUUSD</div>
-            <div class="price-row">
-                <span class="price-label">Harga Live</span>
-                <span class="price-value" id="livePrice">—</span>
-            </div>
-            <div class="price-row">
-                <span class="price-label">Perubahan 24h</span>
-                <span class="price-value" id="priceChange">—</span>
-            </div>
-            <div class="price-row">
-                <span class="price-label">Bias</span>
-                <span class="price-value" id="priceBias">—</span>
-            </div>
-            <div class="price-row">
-                <span class="price-label">Sumber</span>
-                <span class="price-value" id="priceSource" style="font-size:11px;color:#555;">—</span>
-            </div>
-
-            <div class="manual-input" id="manualInput">
-                <label>Harga manual (kalau auto-fetch gagal)</label>
-                <input type="number" id="manualPrice" placeholder="Contoh: 4019.30" step="0.01">
-                <label>Perubahan 24h (%)</label>
-                <input type="number" id="manualChange" placeholder="Contoh: 0.5" step="0.01">
-                <button class="btn btn-secondary" onclick="applyManualPrice()">Terapkan Harga Manual</button>
-            </div>
-        </div>
-
-        <div class="card">
-            <div class="card-title">Pivot Points (Classic)</div>
-            <div class="levels-grid">
-                <div class="level-item s">
-                    <div class="level-label">S2</div>
-                    <div class="level-value" id="s2">—</div>
-                </div>
-                <div class="level-item s">
-                    <div class="level-label">S1</div>
-                    <div class="level-value" id="s1">—</div>
-                </div>
-                <div class="level-item pp">
-                    <div class="level-label">Pivot</div>
-                    <div class="level-value" id="pp">—</div>
-                </div>
-                <div class="level-item r">
-                    <div class="level-label">R1</div>
-                    <div class="level-value" id="r1">—</div>
-                </div>
-                <div class="level-item r">
-                    <div class="level-label">R2</div>
-                    <div class="level-value" id="r2">—</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="card" id="newsCard">
-            <div class="card-title">Berita Relevan XAUUSD</div>
-            <div id="newsContainer" class="news-list">
-                <div style="text-align:center;color:#666;padding:20px;">Klik "Technical + News" untuk load berita</div>
-            </div>
-        </div>
-
-        <button id="refreshBtn" class="btn" onclick="runAnalysis()">Refresh Analisis</button>
-
-        <p class="disclaimer">
-            Analisis otomatis. Bukan saran keuangan. Selalu riset sendiri.
-        </p>
+    <div class="mode-toggle">
+        <button class="mode-btn active" id="btnTechnical">Technical Only</button>
+        <button class="mode-btn" id="btnCombined">Technical + News</button>
     </div>
 
-    <script>
-        // ===== STATE =====
-        let currentPrice = null;
-        let priceChangePct = 0;
-        let prevClose = null;
-        let prevHigh = null;
-        let prevLow = null;
-        let currentMode = 'technical';
+    <div id="modelStatus" class="model-status loading">
+        <span class="loading-spinner"></span>Memuat harga...
+    </div>
 
-        // ===== FETCH WITH TIMEOUT =====
-        async function fetchWithTimeout(url, timeout = 5000) {
-            const controller = new AbortController();
-            const timer = setTimeout(() => controller.abort(), timeout);
-            try {
-                const response = await fetch(url, { signal: controller.signal });
-                clearTimeout(timer);
-                return response;
-            } catch (e) {
-                clearTimeout(timer);
-                throw e;
+    <div id="signalBox" class="signal-box neutral">
+        <div class="signal-label" id="signalLabel">Sinyal Teknikal</div>
+        <div id="signalValue" class="signal-value neutral">—</div>
+        <div id="signalConfidence" class="signal-confidence">Menunggu analisis...</div>
+        <div id="signalReason" class="signal-reason"></div>
+    </div>
+
+    <div class="card" id="tradeCard" style="display:none;">
+        <div class="card-title">Entry Level</div>
+        <div class="trade-grid">
+            <div class="trade-item entry">
+                <div class="trade-label">Entry</div>
+                <div class="trade-value" id="entryLevel">—</div>
+                <div class="trade-note" id="entryNote"></div>
+            </div>
+            <div class="trade-item sl">
+                <div class="trade-label">Stop Loss</div>
+                <div class="trade-value" id="slLevel">—</div>
+                <div class="trade-note" id="slNote"></div>
+            </div>
+            <div class="trade-item tp">
+                <div class="trade-label">Take Profit</div>
+                <div class="trade-value" id="tpLevel">—</div>
+                <div class="trade-note" id="tpNote"></div>
+            </div>
+            <div class="trade-item rr">
+                <div class="trade-label">Risk / Reward</div>
+                <div class="trade-value" id="rrValue">—</div>
+                <div class="trade-note" id="rrNote"></div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Harga XAUUSD</div>
+        <div class="price-row">
+            <span class="price-label">Harga Live</span>
+            <span class="price-value" id="livePrice">—</span>
+        </div>
+        <div class="price-row">
+            <span class="price-label">Perubahan 24h</span>
+            <span class="price-value" id="priceChange">—</span>
+        </div>
+        <div class="price-row">
+            <span class="price-label">Bias</span>
+            <span class="price-value" id="priceBias">—</span>
+        </div>
+        <div class="price-row">
+            <span class="price-label">Sumber</span>
+            <span class="price-value" id="priceSource" style="font-size:11px;color:#555;">—</span>
+        </div>
+        <div class="manual-input" id="manualInput">
+            <label>Harga manual (kalau auto-fetch gagal)</label>
+            <input type="number" id="manualPrice" placeholder="Contoh: 4019.30" step="0.01">
+            <label>Perubahan 24h (%)</label>
+            <input type="number" id="manualChange" placeholder="Contoh: 0.5" step="0.01">
+            <button class="btn btn-secondary" id="btnManual">Terapkan Harga Manual</button>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-title">Pivot Points (Classic)</div>
+        <div class="levels-grid">
+            <div class="level-item s"><div class="level-label">S2</div><div class="level-value" id="s2">—</div></div>
+            <div class="level-item s"><div class="level-label">S1</div><div class="level-value" id="s1">—</div></div>
+            <div class="level-item pp"><div class="level-label">Pivot</div><div class="level-value" id="pp">—</div></div>
+            <div class="level-item r"><div class="level-label">R1</div><div class="level-value" id="r1">—</div></div>
+            <div class="level-item r"><div class="level-label">R2</div><div class="level-value" id="r2">—</div></div>
+        </div>
+    </div>
+
+    <div class="card" id="newsCard">
+        <div class="card-title">Berita Relevan XAUUSD</div>
+        <div id="newsContainer" class="news-list">
+            <div style="text-align:center;color:#666;padding:20px;">Klik "Technical + News" untuk load berita</div>
+        </div>
+    </div>
+
+    <button id="refreshBtn" class="btn">Refresh Analisis</button>
+    <p class="disclaimer">Analisis otomatis. Bukan saran keuangan. Selalu riset sendiri.</p>
+</div>
+
+<script>
+// ===== STATE =====
+var currentPrice = null;
+var priceChangePct = 0;
+var prevClose = null;
+var prevHigh = null;
+var prevLow = null;
+var currentMode = 'technical';
+
+// ===== FETCH WITH TIMEOUT =====
+function fetchWithTimeout(url, timeout) {
+    timeout = timeout || 5000;
+    var controller = new AbortController();
+    var timer = setTimeout(function() { controller.abort(); }, timeout);
+    return fetch(url, { signal: controller.signal }).then(function(response) {
+        clearTimeout(timer);
+        return response;
+    }).catch(function(e) {
+        clearTimeout(timer);
+        throw e;
+    });
+}
+
+// ===== FETCH PRICE =====
+function fetchPrice() {
+    var statusEl = document.getElementById('modelStatus');
+    statusEl.innerHTML = '<span class="loading-spinner"></span>Fetch harga...';
+    statusEl.className = 'model-status loading';
+
+    // API 1: gold-api.com
+    return fetchWithTimeout('https://api.gold-api.com/price/XAU', 5000)
+        .then(function(response) {
+            if (!response.ok) throw new Error('HTTP ' + response.status);
+            return response.json();
+        })
+        .then(function(data) {
+            var price = data.price || data.ask;
+            if (price) {
+                applyPrice(price, 0, 0, 'gold-api.com');
+                statusEl.textContent = '✓ Harga dari gold-api.com';
+                statusEl.className = 'model-status ready';
+                return true;
             }
-        }
-
-        // ===== FETCH PRICE =====
-        async function fetchPrice() {
-            const statusEl = document.getElementById('modelStatus');
-            statusEl.innerHTML = '<span class="loading-spinner"></span>Fetch harga...';
-            statusEl.className = 'model-status loading';
-
-            // API 1: gold-api.com (CORS open)
-            try {
-                const response = await fetchWithTimeout('https://api.gold-api.com/price/XAU', 5000);
-                if (response.ok) {
-                    const data = await response.json();
-                    const price = data.price || data.ask;
-                    if (price) {
-                        // gold-api nggak kasih change 24h, jadi kita pakai 0
-                        // atau kita derive dari prevClose simulasi
-                        applyPrice(price, 0, 0, 'gold-api.com');
-                        statusEl.textContent = '✓ Harga dari gold-api.com';
-                        statusEl.className = 'model-status ready';
-                        return true;
-                    }
-                }
-            } catch (e) {
-                console.warn('gold-api.com failed:', e.message);
-            }
-
-            // API 2: metals.live
-            try {
-                const response = await fetchWithTimeout('https://api.metals.live/v1/spot/gold', 5000);
-                if (response.ok) {
-                    const data = await response.json();
-                    let price = null;
-                    if (Array.isArray(data) && data[0] && data[0].gold) price = data[0].gold;
-                    else if (data.price) price = data.price;
-                    if (price) {
-                        applyPrice(price, 0, 0, 'metals.live');
-                        statusEl.textContent = '✓ Harga dari metals.live';
-                        statusEl.className = 'model-status ready';
-                        return true;
-                    }
-                }
-            } catch (e) {
-                console.warn('metals.live failed:', e.message);
-            }
-
-            // API 3: coingecko (PAXG sebagai proxy gold)
-            try {
-                const response = await fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd&include_24hr_change=true', 5000);
-                if (response.ok) {
-                    const data = await response.json();
+            throw new Error('No price');
+        })
+        .catch(function(e) {
+            console.warn('gold-api.com failed:', e.message);
+            // API 2: coingecko (PAXG proxy)
+            return fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd&include_24hr_change=true', 5000)
+                .then(function(response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(function(data) {
                     if (data['pax-gold'] && data['pax-gold'].usd) {
-                        const price = data['pax-gold'].usd;
-                        const changePct = data['pax-gold'].usd_24h_change || 0;
+                        var price = data['pax-gold'].usd;
+                        var changePct = data['pax-gold'].usd_24h_change || 0;
                         applyPrice(price, price * changePct / 100, changePct, 'coingecko (PAXG)');
                         statusEl.textContent = '✓ Harga dari coingecko (PAXG proxy)';
                         statusEl.className = 'model-status ready';
                         return true;
                     }
-                }
-            } catch (e) {
-                console.warn('coingecko failed:', e.message);
-            }
+                    throw new Error('No price');
+                })
+                .catch(function(e2) {
+                    console.warn('coingecko failed:', e2.message);
+                    // Semua gagal
+                    statusEl.textContent = '⚠ Auto-fetch gagal. Masukkan harga manual.';
+                    statusEl.className = 'model-status fallback';
+                    document.getElementById('manualInput').classList.add('show');
+                    return false;
+                });
+        });
+}
 
-            // Semua gagal — tampilkan input manual
-            statusEl.textContent = '⚠ Auto-fetch gagal. Masukkan harga manual.';
-            statusEl.className = 'model-status fallback';
-            document.getElementById('manualInput').classList.add('show');
-            return false;
+// ===== APPLY PRICE =====
+function applyPrice(price, change, changePct, source) {
+    currentPrice = price;
+    priceChangePct = changePct || 0;
+
+    document.getElementById('livePrice').textContent = '$' + price.toFixed(2);
+
+    var changeEl = document.getElementById('priceChange');
+    var isUp = change >= 0;
+    changeEl.textContent = (isUp ? '▲' : '▼') + ' $' + Math.abs(change).toFixed(2) + ' (' + Math.abs(changePct).toFixed(2) + '%)';
+    changeEl.className = 'price-value ' + (isUp ? 'up' : 'down');
+
+    var biasEl = document.getElementById('priceBias');
+    if (changePct > 0.5) { biasEl.textContent = 'Bullish'; biasEl.className = 'price-value up'; }
+    else if (changePct < -0.5) { biasEl.textContent = 'Bearish'; biasEl.className = 'price-value down'; }
+    else { biasEl.textContent = 'Sideways'; biasEl.className = 'price-value'; }
+
+    document.getElementById('priceSource').textContent = source;
+    document.getElementById('manualInput').classList.remove('show');
+
+    // Derive OHLC
+    if (changePct !== 0) {
+        prevClose = price / (1 + changePct / 100);
+    } else {
+        prevClose = price * 0.998;
+    }
+    var range = Math.abs(price - prevClose) * 1.5;
+    prevHigh = Math.max(price, prevClose) + range * 0.3;
+    prevLow = Math.min(price, prevClose) - range * 0.3;
+
+    calculatePivotPoints(prevHigh, prevLow, prevClose);
+    runTechnicalAnalysis();
+}
+
+// ===== MANUAL PRICE =====
+function applyManualPrice() {
+    var price = parseFloat(document.getElementById('manualPrice').value);
+    var changePct = parseFloat(document.getElementById('manualChange').value) || 0;
+
+    if (!price || price <= 0) {
+        alert('Masukkan harga yang valid');
+        return;
+    }
+
+    var change = price * (changePct / 100);
+    applyPrice(price, change, changePct, 'manual');
+
+    document.getElementById('modelStatus').textContent = '✓ Harga manual diterapkan';
+    document.getElementById('modelStatus').className = 'model-status ready';
+}
+
+// ===== PIVOT POINTS =====
+function calculatePivotPoints(high, low, close) {
+    if (!high || !low || !close) return;
+    var pp = (high + low + close) / 3;
+    var r1 = (2 * pp) - low;
+    var s1 = (2 * pp) - high;
+    var r2 = pp + (high - low);
+    var s2 = pp - (high - low);
+
+    document.getElementById('pp').textContent = '$' + pp.toFixed(2);
+    document.getElementById('r1').textContent = '$' + r1.toFixed(2);
+    document.getElementById('r2').textContent = '$' + r2.toFixed(2);
+    document.getElementById('s1').textContent = '$' + s1.toFixed(2);
+    document.getElementById('s2').textContent = '$' + s2.toFixed(2);
+}
+
+// ===== TECHNICAL SIGNAL =====
+function calculateTechnicalSignal() {
+    if (!currentPrice || !prevHigh || !prevLow || !prevClose) {
+        return { signal: 'NEUTRAL', confidence: 0, reasons: ['Data harga tidak cukup'], score: 0 };
+    }
+
+    var reasons = [];
+    var score = 0;
+
+    if (priceChangePct > 1.5) { score += 3; reasons.push('Momentum kuat ↑'); }
+    else if (priceChangePct > 0.7) { score += 2; reasons.push('Momentum sedang ↑'); }
+    else if (priceChangePct > 0.3) { score += 1; reasons.push('Momentum lemah ↑'); }
+    else if (priceChangePct < -1.5) { score -= 3; reasons.push('Momentum kuat ↓'); }
+    else if (priceChangePct < -0.7) { score -= 2; reasons.push('Momentum sedang ↓'); }
+    else if (priceChangePct < -0.3) { score -= 1; reasons.push('Momentum lemah ↓'); }
+    else { reasons.push('Momentum flat'); }
+
+    var pp = (prevHigh + prevLow + prevClose) / 3;
+    var r1 = (2 * pp) - prevLow;
+    var s1 = (2 * pp) - prevHigh;
+
+    if (currentPrice > r1) { score += 2; reasons.push('Harga di atas R1'); }
+    else if (currentPrice > pp) { score += 1; reasons.push('Harga di atas Pivot'); }
+    else if (currentPrice < s1) { score -= 2; reasons.push('Harga di bawah S1'); }
+    else if (currentPrice < pp) { score -= 1; reasons.push('Harga di bawah Pivot'); }
+
+    var range = prevHigh - prevLow;
+    if (range > 0) {
+        var rangePos = (currentPrice - prevLow) / range;
+        if (rangePos > 0.8) { score += 1; reasons.push('Dekat high harian'); }
+        else if (rangePos < 0.2) { score -= 1; reasons.push('Dekat low harian'); }
+    }
+
+    var signal, confidence;
+    if (score >= 4) { signal = 'BUY'; confidence = Math.min(50 + score * 8, 90); }
+    else if (score <= -4) { signal = 'SELL'; confidence = Math.min(50 + Math.abs(score) * 8, 90); }
+    else if (score > 1) { signal = 'WEAK BUY'; confidence = 40 + score * 8; }
+    else if (score < -1) { signal = 'WEAK SELL'; confidence = 40 + Math.abs(score) * 8; }
+    else { signal = 'NEUTRAL'; confidence = 60; }
+
+    return { signal: signal, confidence: confidence, reasons: reasons, score: score };
+}
+
+// ===== TRADE LEVELS =====
+function calculateTradeLevels(signalResult) {
+    if (!currentPrice || !prevHigh || !prevLow || !prevClose) {
+        document.getElementById('tradeCard').style.display = 'none';
+        return;
+    }
+
+    var signal = signalResult.signal;
+    var score = signalResult.score;
+    var spread = 0.30;
+    var atr = (prevHigh - prevLow) * 0.5;
+
+    var pp = (prevHigh + prevLow + prevClose) / 3;
+    var r1 = (2 * pp) - prevLow;
+    var s1 = (2 * pp) - prevHigh;
+    var r2 = pp + (prevHigh - prevLow);
+    var s2 = pp - (prevHigh - prevLow);
+
+    var entry, sl, tp, entryNote, slNote, tpNote;
+
+    if (signal.indexOf('BUY') !== -1) {
+        entry = Math.min(currentPrice, s1 + spread);
+        entryNote = 'Entry di area support';
+        sl = Math.min(s2 - spread, entry - atr * 1.5);
+        slNote = 'SL di bawah S2';
+        tp = r1 + spread;
+        tpNote = 'TP di R1';
+        if (score > 3) { tp = r2 + spread; tpNote = 'TP di R2 (sinyal kuat)'; }
+    } else if (signal.indexOf('SELL') !== -1) {
+        entry = Math.max(currentPrice, r1 - spread);
+        entryNote = 'Entry di area resistance';
+        sl = Math.max(r2 + spread, entry + atr * 1.5);
+        slNote = 'SL di atas R2';
+        tp = s1 - spread;
+        tpNote = 'TP di S1';
+        if (score < -3) { tp = s2 - spread; tpNote = 'TP di S2 (sinyal kuat)'; }
+    } else {
+        document.getElementById('tradeCard').style.display = 'none';
+        return;
+    }
+
+    var risk = Math.abs(entry - sl);
+    var reward = Math.abs(tp - entry);
+    var rr = risk > 0 ? (reward / risk).toFixed(2) : '—';
+
+    document.getElementById('entryLevel').textContent = '$' + entry.toFixed(2);
+    document.getElementById('entryNote').textContent = entryNote;
+    document.getElementById('slLevel').textContent = '$' + sl.toFixed(2);
+    document.getElementById('slNote').textContent = slNote;
+    document.getElementById('tpLevel').textContent = '$' + tp.toFixed(2);
+    document.getElementById('tpNote').textContent = tpNote;
+    document.getElementById('rrValue').textContent = '1:' + rr;
+    document.getElementById('rrNote').textContent = risk > 0 ? 'Risk $' + risk.toFixed(2) + ' · Reward $' + reward.toFixed(2) : '';
+    document.getElementById('tradeCard').style.display = 'block';
+}
+
+// ===== DISPLAY SIGNAL =====
+function displaySignal(result, label) {
+    var signalBox = document.getElementById('signalBox');
+    var signalValue = document.getElementById('signalValue');
+    var signalConfidence = document.getElementById('signalConfidence');
+    var signalReason = document.getElementById('signalReason');
+    var signalLabel = document.getElementById('signalLabel');
+
+    signalLabel.textContent = label;
+
+    var signalClass = result.signal.indexOf('BUY') !== -1 ? 'buy' : result.signal.indexOf('SELL') !== -1 ? 'sell' : 'neutral';
+    signalBox.className = 'signal-box ' + signalClass;
+    signalValue.textContent = result.signal;
+    signalValue.className = 'signal-value ' + signalClass;
+    signalConfidence.textContent = 'Confidence: ' + result.confidence + '%';
+
+    var uniqueReasons = [];
+    for (var i = 0; i < result.reasons.length; i++) {
+        if (uniqueReasons.indexOf(result.reasons[i]) === -1) uniqueReasons.push(result.reasons[i]);
+    }
+    uniqueReasons = uniqueReasons.slice(0, 5);
+    signalReason.textContent = uniqueReasons.length > 0 ? 'Faktor: ' + uniqueReasons.join(', ') : 'Tidak ada faktor dominan.';
+}
+
+// ===== RUN TECHNICAL =====
+function runTechnicalAnalysis() {
+    var result = calculateTechnicalSignal();
+    displaySignal(result, 'Sinyal Teknikal');
+    calculateTradeLevels(result);
+}
+
+// ===== XAUUSD KEYWORDS =====
+var BULLISH_PATTERNS = [
+    { pattern: /fed.*(dovish|cut|pause|ease|pivot)/i, weight: 3, label: 'Fed dovish' },
+    { pattern: /rate.*(cut|pause|lower)/i, weight: 3, label: 'Rate cut' },
+    { pattern: /(weak|weaker|fall|drop|decline).*(dollar|usd|dxy)/i, weight: 2.5, label: 'Weak USD' },
+    { pattern: /(inflation|inflationary)/i, weight: 1.5, label: 'Inflation' },
+    { pattern: /(geopolitic|war|conflict|tension|strike|attack|crisis)/i, weight: 2.5, label: 'Geopolitik' },
+    { pattern: /(recession|slowdown|contraction)/i, weight: 2, label: 'Resesi' },
+    { pattern: /(safe.?haven|risk.?off|uncertainty|fear)/i, weight: 2, label: 'Safe haven' },
+    { pattern: /(gold|bullion|xau).*(rally|surge|rise|gain|climb|jump)/i, weight: 3, label: 'Gold rally' }
+];
+
+var BEARISH_PATTERNS = [
+    { pattern: /fed.*(hawkish|hike|raise|tighten)/i, weight: 3, label: 'Fed hawkish' },
+    { pattern: /rate.*(hike|raise|higher|increase)/i, weight: 3, label: 'Rate hike' },
+    { pattern: /(strong|stronger|rise|gain|rally).*(dollar|usd|dxy)/i, weight: 2.5, label: 'Strong USD' },
+    { pattern: /(yield|treasury|bond).*(rise|higher|gain|climb)/i, weight: 2, label: 'Yield naik' },
+    { pattern: /(recovery|optimism|rebound|improve)/i, weight: 1.5, label: 'Recovery' },
+    { pattern: /(gold|bullion|xau).*(fall|drop|decline|slip|slide|tumble)/i, weight: 3, label: 'Gold turun' }
+];
+
+var RELEVANCE_PATTERNS = [
+    /gold/i, /xau/i, /bullion/i,
+    /fed/i, /federal reserve/i, /fomc/i, /powell/i,
+    /dollar/i, /usd/i, /dxy/i,
+    /inflation/i, /cpi/i, /pce/i,
+    /rate/i, /yield/i, /treasury/i,
+    /geopolitic/i, /war/i, /conflict/i, /tension/i, /crisis/i,
+    /recession/i, /slowdown/i,
+    /safe.?haven/i, /risk/i
+];
+
+function scoreNews(title, description) {
+    var text = title + ' ' + description;
+    var score = 0;
+    var reasons = [];
+    for (var i = 0; i < BULLISH_PATTERNS.length; i++) {
+        if (BULLISH_PATTERNS[i].pattern.test(text)) {
+            score += BULLISH_PATTERNS[i].weight;
+            reasons.push('+' + BULLISH_PATTERNS[i].weight + ' ' + BULLISH_PATTERNS[i].label);
         }
-
-        // ===== APPLY PRICE =====
-        function applyPrice(price, change, changePct, source) {
-            currentPrice = price;
-            priceChangePct = changePct || 0;
-
-            document.getElementById('livePrice').textContent = '$' + price.toFixed(2);
-
-            const changeEl = document.getElementById('priceChange');
-            const isUp = change >= 0;
-            changeEl.textContent = `${isUp ? '▲' : '▼'} $${Math.abs(change).toFixed(2)} (${Math.abs(changePct).toFixed(2)}%)`;
-            changeEl.className = 'price-value ' + (isUp ? 'up' : 'down');
-
-            const biasEl = document.getElementById('priceBias');
-            if (changePct > 0.5) { biasEl.textContent = 'Bullish'; biasEl.className = 'price-value up'; }
-            else if (changePct < -0.5) { biasEl.textContent = 'Bearish'; biasEl.className = 'price-value down'; }
-            else { biasEl.textContent = 'Sideways'; biasEl.className = 'price-value'; }
-
-            document.getElementById('priceSource').textContent = source;
-            document.getElementById('manualInput').classList.remove('show');
-
-            // Derive OHLC
-            if (changePct !== 0) {
-                prevClose = price / (1 + changePct / 100);
-            } else {
-                prevClose = price * 0.998;
-            }
-            const range = Math.abs(price - prevClose) * 1.5;
-            prevHigh = Math.max(price, prevClose) + range * 0.3;
-            prevLow = Math.min(price, prevClose) - range * 0.3;
-
-            calculatePivotPoints(prevHigh, prevLow, prevClose);
-            runTechnicalAnalysis();
+    }
+    for (var j = 0; j < BEARISH_PATTERNS.length; j++) {
+        if (BEARISH_PATTERNS[j].pattern.test(text)) {
+            score -= BEARISH_PATTERNS[j].weight;
+            reasons.push('-' + BEARISH_PATTERNS[j].weight + ' ' + BEARISH_PATTERNS[j].label);
         }
+    }
+    return { score: score, reasons: reasons };
+}
 
-        // ===== MANUAL PRICE =====
-        function applyManualPrice() {
-            const price = parseFloat(document.getElementById('manualPrice').value);
-            const changePct = parseFloat(document.getElementById('manualChange').value) || 0;
+function isRelevant(title, description) {
+    var text = title + ' ' + description;
+    for (var i = 0; i < RELEVANCE_PATTERNS.length; i++) {
+        if (RELEVANCE_PATTERNS[i].test(text)) return true;
+    }
+    return false;
+}
 
-            if (!price || price <= 0) {
-                alert('Masukkan harga yang valid');
-                return;
-            }
-
-            const change = price * (changePct / 100);
-            applyPrice(price, change, changePct, 'manual');
-
-            document.getElementById('modelStatus').textContent = '✓ Harga manual diterapkan';
-            document.getElementById('modelStatus').className = 'model-status ready';
-        }
-
-        // ===== PIVOT POINTS =====
-        function calculatePivotPoints(high, low, close) {
-            if (!high || !low || !close) return;
-
-            const pp = (high + low + close) / 3;
-            const r1 = (2 * pp) - low;
-            const s1 = (2 * pp) - high;
-            const r2 = pp + (high - low);
-            const s2 = pp - (high - low);
-
-            document.getElementById('pp').textContent = '$' + pp.toFixed(2);
-            document.getElementById('r1').textContent = '$' + r1.toFixed(2);
-            document.getElementById('r2').textContent = '$' + r2.toFixed(2);
-            document.getElementById('s1').textContent = '$' + s1.toFixed(2);
-            document.getElementById('s2').textContent = '$' + s2.toFixed(2);
-        }
-
-        // ===== TECHNICAL SIGNAL =====
-        function calculateTechnicalSignal() {
-            if (!currentPrice || !prevHigh || !prevLow || !prevClose) {
-                return { signal: 'NEUTRAL', confidence: 0, reasons: ['Data harga tidak cukup'], score: 0 };
-            }
-
-            const reasons = [];
-            let score = 0;
-
-            // Momentum
-            if (priceChangePct > 1.5) { score += 3; reasons.push('Momentum kuat ↑'); }
-            else if (priceChangePct > 0.7) { score += 2; reasons.push('Momentum sedang ↑'); }
-            else if (priceChangePct > 0.3) { score += 1; reasons.push('Momentum lemah ↑'); }
-            else if (priceChangePct < -1.5) { score -= 3; reasons.push('Momentum kuat ↓'); }
-            else if (priceChangePct < -0.7) { score -= 2; reasons.push('Momentum sedang ↓'); }
-            else if (priceChangePct < -0.3) { score -= 1; reasons.push('Momentum lemah ↓'); }
-            else { reasons.push('Momentum flat'); }
-
-            // Posisi vs pivot
-            const pp = (prevHigh + prevLow + prevClose) / 3;
-            const r1 = (2 * pp) - prevLow;
-            const s1 = (2 * pp) - prevHigh;
-
-            if (currentPrice > r1) { score += 2; reasons.push('Harga di atas R1'); }
-            else if (currentPrice > pp) { score += 1; reasons.push('Harga di atas Pivot'); }
-            else if (currentPrice < s1) { score -= 2; reasons.push('Harga di bawah S1'); }
-            else if (currentPrice < pp) { score -= 1; reasons.push('Harga di bawah Pivot'); }
-
-            // Range position
-            const range = prevHigh - prevLow;
-            if (range > 0) {
-                const rangePos = (currentPrice - prevLow) / range;
-                if (rangePos > 0.8) { score += 1; reasons.push('Dekat high harian'); }
-                else if (rangePos < 0.2) { score -= 1; reasons.push('Dekat low harian'); }
-            }
-
-            let signal, confidence;
-            if (score >= 4) { signal = 'BUY'; confidence = Math.min(50 + score * 8, 90); }
-            else if (score <= -4) { signal = 'SELL'; confidence = Math.min(50 + Math.abs(score) * 8, 90); }
-            else if (score > 1) { signal = 'WEAK BUY'; confidence = 40 + score * 8; }
-            else if (score < -1) { signal = 'WEAK SELL'; confidence = 40 + Math.abs(score) * 8; }
-            else { signal = 'NEUTRAL'; confidence = 60; }
-
-            return { signal, confidence, reasons, score };
-        }
-
-        // ===== TRADE LEVELS =====
-        function calculateTradeLevels(signalResult) {
-            if (!currentPrice || !prevHigh || !prevLow || !prevClose) {
-                document.getElementById('tradeCard').style.display = 'none';
-                return;
-            }
-
-            const signal = signalResult.signal;
-            const score = signalResult.score;
-            const spread = 0.30;
-            const atr = (prevHigh - prevLow) * 0.5;
-
-            const pp = (prevHigh + prevLow + prevClose) / 3;
-            const r1 = (2 * pp) - prevLow;
-            const s1 = (2 * pp) - prevHigh;
-            const r2 = pp + (prevHigh - prevLow);
-            const s2 = pp - (prevHigh - prevLow);
-
-            let entry, sl, tp, entryNote, slNote, tpNote;
-
-            if (signal.includes('BUY')) {
-                entry = Math.min(currentPrice, s1 + spread);
-                entryNote = 'Entry di area support';
-                sl = Math.min(s2 - spread, entry - atr * 1.5);
-                slNote = 'SL di bawah S2';
-                tp = r1 + spread;
-                tpNote = 'TP di R1';
-                if (score > 3) { tp = r2 + spread; tpNote = 'TP di R2 (sinyal kuat)'; }
-            } else if (signal.includes('SELL')) {
-                entry = Math.max(currentPrice, r1 - spread);
-                entryNote = 'Entry di area resistance';
-                sl = Math.max(r2 + spread, entry + atr * 1.5);
-                slNote = 'SL di atas R2';
-                tp = s1 - spread;
-                tpNote = 'TP di S1';
-                if (score < -3) { tp = s2 - spread; tpNote = 'TP di S2 (sinyal kuat)'; }
-            } else {
-                document.getElementById('tradeCard').style.display = 'none';
-                return;
-            }
-
-            const risk = Math.abs(entry - sl);
-            const reward = Math.abs(tp - entry);
-            const rr = risk > 0 ? (reward / risk).toFixed(2) : '—';
-
-            document.getElementById('entryLevel').textContent = '$' + entry.toFixed(2);
-            document.getElementById('entryNote').textContent = entryNote;
-            document.getElementById('slLevel').textContent = '$' + sl.toFixed(2);
-            document.getElementById('slNote').textContent = slNote;
-            document.getElementById('tpLevel').textContent = '$' + tp.toFixed(2);
-            document.getElementById('tpNote').textContent = tpNote;
-            document.getElementById('rrValue').textContent = '1:' + rr;
-            document.getElementById('rrNote').textContent = risk > 0 ? `Risk $${risk.toFixed(2)} · Reward $${reward.toFixed(2)}` : '';
-            document.getElementById('tradeCard').style.display = 'block';
-        }
-
-        // ===== DISPLAY SIGNAL =====
-        function displaySignal(result, label) {
-            const signalBox = document.getElementById('signalBox');
-            const signalValue = document.getElementById('signalValue');
-            const signalConfidence = document.getElementById('signalConfidence');
-            const signalReason = document.getElementById('signalReason');
-            const signalLabel = document.getElementById('signalLabel');
-
-            signalLabel.textContent = label;
-
-            const signalClass = result.signal.includes('BUY') ? 'buy' : result.signal.includes('SELL') ? 'sell' : 'neutral';
-            signalBox.className = `signal-box ${signalClass}`;
-            signalValue.textContent = result.signal;
-            signalValue.className = `signal-value ${signalClass}`;
-            signalConfidence.textContent = `Confidence: ${result.confidence}%`;
-
-            const uniqueReasons = [...new Set(result.reasons)].slice(0, 5);
-            signalReason.textContent = uniqueReasons.length > 0
-                ? 'Faktor: ' + uniqueReasons.join(', ')
-                : 'Tidak ada faktor dominan.';
-        }
-
-        // ===== RUN TECHNICAL =====
-        function runTechnicalAnalysis() {
-            const result = calculateTechnicalSignal();
-            displaySignal(result, 'Sinyal Teknikal');
-            calculateTradeLevels(result);
-        }
-
-        // ===== FETCH NEWS =====
-        async function fetchNews() {
-            const feeds = [
-                { name: 'FXStreet', url: 'https://www.fxstreet.com/rss/news' },
-                { name: 'Reuters', url: 'https://feeds.reuters.com/reuters/businessNews' }
-            ];
-            const allNews = [];
-            for (const feed of feeds) {
-                try {
-                    const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(feed.url)}&count=15`;
-                    const response = await fetchWithTimeout(apiUrl, 8000);
-                    if (!response.ok) continue;
-                    const data = await response.json();
-                    if (data.status === 'ok' && data.items) {
-                        data.items.forEach(item => {
-                            allNews.push({
-                                title: item.title,
-                                description: (item.description || '').replace(/<[^>]*>/g, ''),
-                                link: item.link,
-                                pubDate: item.pubDate,
-                                source: feed.name
-                            });
+// ===== FETCH NEWS =====
+function fetchNews() {
+    var feeds = [
+        { name: 'FXStreet', url: 'https://www.fxstreet.com/rss/news' },
+        { name: 'Reuters', url: 'https://feeds.reuters.com/reuters/businessNews' }
+    ];
+    var promises = feeds.map(function(feed) {
+        var apiUrl = 'https://api.rss2json.com/v1/api.json?rss_url=' + encodeURIComponent(feed.url) + '&count=15';
+        return fetchWithTimeout(apiUrl, 8000)
+            .then(function(response) {
+                if (!response.ok) throw new Error('HTTP ' + response.status);
+                return response.json();
+            })
+            .then(function(data) {
+                var items = [];
+                if (data.status === 'ok' && data.items) {
+                    data.items.forEach(function(item) {
+                        items.push({
+                            title: item.title,
+                            description: (item.description || '').replace(/<[^>]*>/g, ''),
+                            link: item.link,
+                            pubDate: item.pubDate,
+                            source: feed.name
                         });
-                    }
-                } catch (e) { console.warn('Feed error:', e); }
-            }
-            return allNews;
+                    });
+                }
+                return items;
+            })
+            .catch(function(e) {
+                console.warn('Feed ' + feed.name + ' failed:', e.message);
+                return [];
+            });
+    });
+
+    return Promise.all(promises).then(function(results) {
+        var allNews = [];
+        results.forEach(function(items) { allNews = allNews.concat(items); });
+        return allNews;
+    });
+}
+
+// ===== RUN COMBINED ANALYSIS =====
+function runCombinedAnalysis() {
+    var statusEl = document.getElementById('modelStatus');
+    var newsContainer = document.getElementById('newsContainer');
+
+    statusEl.innerHTML = '<span class="loading-spinner"></span>Fetch berita...';
+    statusEl.className = 'model-status loading';
+    newsContainer.innerHTML = '<div style="text-align:center;color:#666;padding:20px;">Memuat berita...</div>';
+
+    fetchNews().then(function(allNews) {
+        var relevant = allNews.filter(function(n) { return isRelevant(n.title, n.description); });
+
+        if (relevant.length === 0) {
+            newsContainer.innerHTML = '<div style="text-align:center;color:#e04040;padding:20px;">Tidak ada berita relevan. Pakai Technical Only.</div>';
+            statusEl.textContent = '⚠ Tidak ada berita relevan';
+            statusEl.className = 'model-status fallback';
+            return;
         }
 
-        // ===== XAUUSD KEYWORDS =====
-        const BULLISH_PATTERNS = [
-            { pattern: /fed.*(dovish|cut|pause|ease|pivot)/i, weight: 3, label: 'Fed dovish' },
-            { pattern: /rate.*(cut|pause|lower)/i, weight: 3, label: 'Rate cut' },
-            { pattern: /(weak|weaker|fall|drop|decline).*(dollar|usd|dxy)/i, weight: 2.5, label: 'Weak USD' },
-            { pattern: /(inflation|inflationary)/i, weight: 1.5, label: 'Inflation' },
-            { pattern: /(geopolitic|war|conflict|tension|strike|attack|crisis)/i, weight: 2.5, label: 'Geopolitik' },
-            { pattern: /(recession|slowdown|contraction)/i, weight: 2, label: 'Resesi' },
-            { pattern: /(safe.?haven|risk.?off|uncertainty|fear)/i, weight: 2, label: 'Safe haven' },
-            { pattern: /(gold|bullion|xau).*(rally|surge|rise|gain|climb|jump)/i, weight: 3, label: 'Gold rally' },
-        ];
+        var totalScore = 0;
+        var allReasons = [];
+        relevant.forEach(function(item) {
+            var result = scoreNews(item.title, item.description);
+            item.score = result.score;
+            totalScore += result.score;
+            allReasons = allReasons.concat(result.reasons);
+        });
 
-        const BEARISH_PATTERNS = [
-            { pattern: /fed.*(hawkish|hike|raise|tighten)/i, weight: 3, label: 'Fed hawkish' },
-            { pattern: /rate.*(hike|raise|higher|increase)/i, weight: 3, label: 'Rate hike' },
-            { pattern: /(strong|stronger|rise|gain|rally).*(dollar|usd|dxy)/i, weight: 2.5, label: 'Strong USD' },
-            { pattern: /(yield|treasury|bond).*(rise|higher|gain|climb)/i, weight: 2, label: 'Yield naik' },
-            { pattern: /(recovery|optimism|rebound|improve)/i, weight: 1.5, label: 'Recovery' },
-            { pattern: /(gold|bullion|xau).*(fall|drop|decline|slip|slide|tumble)/i, weight: 3, label: 'Gold turun' },
-        ];
+        var avgScore = totalScore / relevant.length;
+        var techResult = calculateTechnicalSignal();
+        var combinedScore = (techResult.score * 0.6) + (avgScore * 0.4);
 
-        const RELEVANCE_PATTERNS = [
-            /gold/i, /xau/i, /bullion/i,
-            /fed/i, /federal reserve/i, /fomc/i, /powell/i,
-            /dollar/i, /usd/i, /dxy/i,
-            /inflation/i, /cpi/i, /pce/i,
-            /rate/i, /yield/i, /treasury/i,
-            /geopolitic/i, /war/i, /conflict/i, /tension/i, /crisis/i,
-            /recession/i, /slowdown/i,
-            /safe.?haven/i, /risk/i,
-        ];
+        var signal, confidence;
+        if (combinedScore >= 3) { signal = 'BUY'; confidence = Math.min(50 + combinedScore * 10, 92); }
+        else if (combinedScore <= -3) { signal = 'SELL'; confidence = Math.min(50 + Math.abs(combinedScore) * 10, 92); }
+        else if (combinedScore > 1) { signal = 'WEAK BUY'; confidence = 40 + combinedScore * 10; }
+        else if (combinedScore < -1) { signal = 'WEAK SELL'; confidence = 40 + Math.abs(combinedScore) * 10; }
+        else { signal = 'NEUTRAL'; confidence = 60; }
 
-        function scoreNews(title, description) {
-            const text = title + ' ' + description;
-            let score = 0;
-            let reasons = [];
-            BULLISH_PATTERNS
+        var combinedResult = {
+            signal: signal,
+            confidence: Math.round(confidence),
+            reasons: techResult.reasons.concat(allReasons.slice(0, 5)),
+            score: combinedScore
+        };
+
+        displaySignal(combinedResult, 'Sinyal Teknikal + News');
+        calculateTradeLevels(combinedResult);
+
+        newsContainer.innerHTML = relevant.slice(0, 15).map(function(item) {
+            var s = item.score;
+            var label = s > 1 ? 'BULLISH' : s < -1 ? 'BEARISH' : 'NEUTRAL';
+            var cls = s > 1 ? 'positive' : s < -1 ? 'negative' : 'neutral';
+            return '<div class="news-item"><div class="news-title">' + item.title + '</div><div class="news-meta"><span class="sentiment-badge ' + cls + '">' + label + '</span><span>Skor: ' + (s > 0 ? '+' : '') + s.toFixed(1) + '</span><span>· ' + item.source + '</span></div></div>';
+        }).join('');
+
+        statusEl.textContent = '✓ Analisis gabungan selesai (' + relevant.length + ' berita)';
+        statusEl.className = 'model-status ready';
+    });
+}
+
+// ===== REFRESH =====
+function runAnalysis() {
+    if (currentMode === 'technical') {
+        if (currentPrice) {
+            runTechnicalAnalysis();
+            document.getElementById('modelStatus').textContent = '✓ Analisis teknikal selesai';
+            document.getElementById('modelStatus').className = 'model-status ready';
+        } else {
+            fetchPrice();
+        }
+    } else {
+        if (!currentPrice) {
+            fetchPrice().then(function() { runCombinedAnalysis(); });
+        } else {
+            runCombinedAnalysis();
+        }
+    }
+}
+
+// ===== EVENT LISTENERS =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Mode toggle
+    document.getElementById('btnTechnical').addEventListener('click', function() {
+        currentMode = 'technical';
+        this.classList.add('active');
+        document.getElementById('btnCombined').classList.remove('active');
+        if (currentPrice) runTechnicalAnalysis();
+        document.getElementById('modelStatus').textContent = currentPrice ? '✓ Mode teknikal' : 'Memuat harga...';
+        document.getElementById('modelStatus').className = 'model-status ready';
+    });
+
+    document.getElementById('btnCombined').addEventListener('click', function() {
+        currentMode = 'combined';
+        this.classList.add('active');
+        document.getElementById('btnTechnical').classList.remove('active');
+        if (!currentPrice) {
+            fetchPrice().then(function() { runCombinedAnalysis(); });
+        } else {
+            runCombinedAnalysis();
+        }
+    });
+
+    // Refresh
+    document.getElementById('refreshBtn').addEventListener('click', runAnalysis);
+
+    // Manual price
+    document.getElementById('btnManual').addEventListener('click', applyManualPrice);
+
+    // Initial fetch
+    fetchPrice();
+});
+</script>
+</body>
+</html>
