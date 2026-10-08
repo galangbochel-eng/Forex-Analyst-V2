@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>XAUUSD Market Analyst Pro</title>
+    <title>XAUUSD Market Analyst Pro - M15 1:2 Setup</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
         tailwind.config = {
@@ -14,8 +14,11 @@
                         darkbg: '#0a0a0a',
                         cardbg: '#141414',
                         cardborder: '#262626',
-                        gold: '#f59e0b',
-                        goldlight: '#fbbf24'
+                        gold: '#ffd700',
+                        goldlight: '#fde047',
+                        accentblue: '#3b82f6',
+                        accentgreen: '#10b981',
+                        accentred: '#ef4444'
                     },
                     fontFamily: {
                         sans: ['Inter', 'system-ui', '-apple-system', 'sans-serif']
@@ -32,16 +35,13 @@
             font-family: 'Inter', sans-serif;
         }
         .glow-gold {
-            box-shadow: 0 0 25px rgba(245, 158, 11, 0.15);
+            box-shadow: 0 0 25px rgba(255, 215, 0, 0.15);
         }
         .glow-green {
-            box-shadow: 0 0 25px rgba(34, 197, 94, 0.2);
+            box-shadow: 0 0 25px rgba(16, 185, 129, 0.2);
         }
         .glow-red {
             box-shadow: 0 0 25px rgba(239, 68, 68, 0.2);
-        }
-        .animate-pulse-fast {
-            animation: pulse 1.2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
         /* Custom scrollbar */
         ::-webkit-scrollbar {
@@ -73,18 +73,32 @@
                 </div>
                 <div>
                     <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
-                        XAUUSD <span class="text-xs px-2 py-0.5 rounded-full bg-gold/20 text-gold font-semibold border border-gold/30">GOLD ANALYST</span>
+                        XAUUSD <span class="text-xs px-2 py-0.5 rounded-full bg-gold/20 text-gold font-semibold border border-gold/30">M15 ANALYST</span>
                     </h1>
-                    <p class="text-xs text-gray-400">Real-time Technical & Market Intelligence</p>
+                    <p class="text-xs text-gray-400">Precision Scalping & Technical Daytrading Setup</p>
                 </div>
             </div>
 
             <!-- Global Controls -->
             <div class="flex items-center flex-wrap gap-3">
+                <!-- Timeframe Selector -->
+                <div class="bg-black/50 p-1 rounded-xl border border-cardborder flex items-center gap-1">
+                    <span class="text-[10px] font-bold text-gray-400 px-2 uppercase tracking-wider">TF:</span>
+                    <button id="tfM15" onclick="setTimeframe('M15')" class="px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-black bg-gold shadow-sm">
+                        M15
+                    </button>
+                    <button id="tfH1" onclick="setTimeframe('H1')" class="px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white">
+                        H1
+                    </button>
+                    <button id="tfD1" onclick="setTimeframe('D1')" class="px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white">
+                        D1
+                    </button>
+                </div>
+
                 <!-- Mode Toggle -->
-                <div class="bg-black/40 p-1 rounded-xl border border-cardborder flex items-center">
+                <div class="bg-black/50 p-1 rounded-xl border border-cardborder flex items-center">
                     <button id="btnModeTech" onclick="setAnalysisMode('tech')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-white bg-cardborder shadow-sm">
-                        Technical Only
+                        Technical Only (M15)
                     </button>
                     <button id="btnModeNews" onclick="setAnalysisMode('news')" class="px-3 py-1.5 text-xs font-semibold rounded-lg transition-all text-gray-400 hover:text-white">
                         Technical + News
@@ -98,7 +112,7 @@
                 </button>
 
                 <!-- Refresh Button -->
-                <button onclick="fetchMarketData()" class="p-2 rounded-xl border border-cardborder bg-cardbg text-gray-300 hover:text-white hover:border-gold/50 transition">
+                <button onclick="fetchMarketData()" class="p-2 rounded-xl border border-cardborder bg-cardbg text-gray-300 hover:text-white hover:border-gold/50 transition" title="Refresh Price Feed">
                     <svg id="refreshIcon" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
                     </svg>
@@ -114,14 +128,14 @@
         <div id="statusNotification" class="hidden p-3.5 rounded-xl border text-xs font-medium flex items-center justify-between transition-all">
             <div class="flex items-center gap-2">
                 <span id="statusIcon"></span>
-                <span id="statusMessage">Initializing market analysis engine...</span>
+                <span id="statusMessage">Initializing M15 analysis engine...</span>
             </div>
             <button onclick="dismissNotification()" class="text-gray-400 hover:text-white">
                 <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
             </button>
         </div>
 
-        <!-- Live Price & Bias Top Grid -->
+        <!-- Live Price & Signal Top Grid -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <!-- Price Summary Card -->
             <div class="bg-cardbg border border-cardborder rounded-2xl p-5 relative overflow-hidden flex flex-col justify-between">
@@ -144,7 +158,7 @@
                         <span id="priceChange24h" class="text-sm font-bold text-gray-300">0.00 (0.00%)</span>
                     </div>
                     <div>
-                        <span class="text-xs text-gray-400 block text-right">Daily Bias</span>
+                        <span class="text-xs text-gray-400 block text-right">Trend Bias</span>
                         <span id="dailyBias" class="text-sm font-bold text-gray-300 flex items-center gap-1 justify-end">
                             --
                         </span>
@@ -156,8 +170,8 @@
             <div id="signalCard" class="bg-cardbg border border-cardborder rounded-2xl p-5 lg:col-span-2 flex flex-col sm:flex-row justify-between items-center gap-6 transition-all duration-300">
                 <div class="space-y-2 text-center sm:text-left w-full sm:w-auto">
                     <div class="flex items-center justify-center sm:justify-start gap-2">
-                        <span class="text-xs uppercase font-bold text-gray-400 tracking-wider">Composite Analysis Signal</span>
-                        <span id="activeModeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-gray-800 text-gray-300 border border-gray-700">TECHNICAL ONLY</span>
+                        <span class="text-xs uppercase font-bold text-gray-400 tracking-wider">M15 Scalp Signal</span>
+                        <span id="activeModeBadge" class="text-[10px] font-bold px-2 py-0.5 rounded bg-gold/20 text-gold border border-gold/30">TECHNICAL ONLY (M15)</span>
                     </div>
                     <div class="flex items-center justify-center sm:justify-start gap-3">
                         <span id="signalMain" class="text-3xl sm:text-4xl font-extrabold tracking-tight text-gray-300">
@@ -168,7 +182,7 @@
                         </div>
                     </div>
                     <p id="signalSummaryText" class="text-xs text-gray-400 max-w-xl">
-                        Fetching live data feed to calculate technical momentum and pivot levels...
+                        Calculating M15 volatility range, technical momentum, and 1:2 RRR parameters...
                     </p>
                 </div>
 
@@ -185,51 +199,57 @@
             </div>
         </div>
 
-        <!-- Actionable Trade Setup Cards -->
+        <!-- Actionable Trade Setup Cards with Enforced 1:2 Risk to Reward -->
         <div>
-            <h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 mb-3 flex items-center gap-2">
-                <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                Calculated Trade Plan
-            </h2>
+            <div class="flex justify-between items-center mb-3">
+                <h2 class="text-sm font-bold uppercase tracking-wider text-gray-400 flex items-center gap-2">
+                    <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    M15 Trade Plan (Strict 1 : 2 RRR)
+                </h2>
+                <span id="tfBadgeCard" class="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    M15 Horizon ATR
+                </span>
+            </div>
+
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                <!-- Entry Level Card -->
-                <div class="bg-cardbg border border-blue-500/30 rounded-xl p-4 bg-gradient-to-b from-blue-500/5 to-transparent relative overflow-hidden">
+                <!-- Entry Level Card (Blue) -->
+                <div class="bg-cardbg border border-blue-500/40 rounded-xl p-4 bg-gradient-to-b from-blue-500/10 to-transparent relative overflow-hidden shadow-lg">
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-xs font-bold uppercase text-blue-400 tracking-wider">Suggested Entry</span>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-semibold">BUY / SELL</span>
+                        <span id="actionTypeTag" class="text-[10px] px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-extrabold uppercase">BUY LIMIT / SPOT</span>
                     </div>
-                    <div id="tradeEntry" class="text-2xl font-bold text-white mt-1">$0.00</div>
-                    <p id="entryNote" class="text-[11px] text-gray-400 mt-2">Optimal level based on price action.</p>
+                    <div id="tradeEntry" class="text-2xl font-black text-white mt-1">$0.00</div>
+                    <p id="entryNote" class="text-[11px] text-gray-400 mt-2">Targeted M15 support level entry.</p>
                 </div>
 
-                <!-- Stop Loss Card -->
-                <div class="bg-cardbg border border-red-500/30 rounded-xl p-4 bg-gradient-to-b from-red-500/5 to-transparent relative overflow-hidden">
+                <!-- Stop Loss Card (Red) -->
+                <div class="bg-cardbg border border-red-500/40 rounded-xl p-4 bg-gradient-to-b from-red-500/10 to-transparent relative overflow-hidden shadow-lg">
                     <div class="flex justify-between items-center mb-1">
                         <span class="text-xs font-bold uppercase text-red-400 tracking-wider">Stop Loss (SL)</span>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-300 font-semibold">Risk Level</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-red-500/20 text-red-300 font-extrabold uppercase">1x Risk</span>
                     </div>
-                    <div id="tradeSL" class="text-2xl font-bold text-red-400 mt-1">$0.00</div>
-                    <p id="slNote" class="text-[11px] text-gray-400 mt-2">Calculated at 1.5x ATR protection buffer.</p>
+                    <div id="tradeSL" class="text-2xl font-black text-red-400 mt-1">$0.00</div>
+                    <p id="slNote" class="text-[11px] text-gray-400 mt-2">Risk Distance: $0.00 (1.0x ATR)</p>
                 </div>
 
-                <!-- Take Profit Card -->
-                <div class="bg-cardbg border border-emerald-500/30 rounded-xl p-4 bg-gradient-to-b from-emerald-500/5 to-transparent relative overflow-hidden">
+                <!-- Take Profit Card (Green) -->
+                <div class="bg-cardbg border border-emerald-500/40 rounded-xl p-4 bg-gradient-to-b from-emerald-500/10 to-transparent relative overflow-hidden shadow-lg">
                     <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs font-bold uppercase text-emerald-400 tracking-wider">Take Profit (TP1 / TP2)</span>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-semibold">Target</span>
+                        <span class="text-xs font-bold uppercase text-emerald-400 tracking-wider">Take Profit (TP)</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-extrabold uppercase">2x Reward</span>
                     </div>
-                    <div id="tradeTP" class="text-2xl font-bold text-emerald-400 mt-1">$0.00</div>
-                    <p id="tpNote" class="text-[11px] text-gray-400 mt-2">TP1: -- | TP2: --</p>
+                    <div id="tradeTP" class="text-2xl font-black text-emerald-400 mt-1">$0.00</div>
+                    <p id="tpNote" class="text-[11px] text-gray-400 mt-2">Reward Distance: $0.00 (2.0x SL)</p>
                 </div>
 
-                <!-- Risk / Reward Ratio Card -->
-                <div class="bg-cardbg border border-amber-500/30 rounded-xl p-4 bg-gradient-to-b from-amber-500/5 to-transparent relative overflow-hidden">
+                <!-- Risk / Reward Ratio Card (Orange) -->
+                <div class="bg-cardbg border border-amber-500/40 rounded-xl p-4 bg-gradient-to-b from-amber-500/10 to-transparent relative overflow-hidden shadow-lg">
                     <div class="flex justify-between items-center mb-1">
-                        <span class="text-xs font-bold uppercase text-amber-400 tracking-wider">Risk / Reward Ratio</span>
-                        <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold">RRR</span>
+                        <span class="text-xs font-bold uppercase text-amber-400 tracking-wider">Risk : Reward</span>
+                        <span class="text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-extrabold uppercase">STRICT 1:2</span>
                     </div>
-                    <div id="tradeRRR" class="text-2xl font-bold text-amber-400 mt-1">1 : 0.00</div>
-                    <p id="rrrQuality" class="text-[11px] text-gray-400 mt-2">Efficiency Rating: --</p>
+                    <div id="tradeRRR" class="text-2xl font-black text-amber-400 mt-1">1 : 2.0</div>
+                    <p id="rrrQuality" class="text-[11px] text-gray-400 mt-2">Risk: $0.00 | Profit: $0.00</p>
                 </div>
             </div>
         </div>
@@ -237,14 +257,14 @@
         <!-- Dashboard Content Grid: Technical Breakdown & Pivot Points -->
         <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
             
-            <!-- Left Column: Pivot Points & Derived Levels -->
+            <!-- Left Column: Pivot Points & Derived M15 Levels -->
             <div class="bg-cardbg border border-cardborder rounded-2xl p-5 space-y-4">
                 <div class="flex justify-between items-center border-b border-cardborder pb-3">
                     <h3 class="font-bold text-white text-base flex items-center gap-2">
                         <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M3 14h18m-9-4v8m-7 0h14a2 2 0 002-2V6a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z"></path></svg>
-                        Classic Pivot Points
+                        Pivot Points (<span id="pivotTfText">M15</span>)
                     </h3>
-                    <span class="text-[10px] text-gray-400 font-mono">Daily Derive</span>
+                    <span class="text-[10px] text-gray-400 font-mono">Classic Horizon</span>
                 </div>
 
                 <div class="overflow-x-auto">
@@ -288,16 +308,16 @@
 
                 <div class="pt-3 border-t border-cardborder text-[11px] text-gray-400 space-y-1">
                     <div class="flex justify-between">
-                        <span>Derived High (H):</span>
+                        <span>Horizon High (H):</span>
                         <span id="derivedHigh" class="text-gray-200 font-mono">$0.00</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Derived Low (L):</span>
+                        <span>Horizon Low (L):</span>
                         <span id="derivedLow" class="text-gray-200 font-mono">$0.00</span>
                     </div>
                     <div class="flex justify-between">
-                        <span>Daily Range (H-L):</span>
-                        <span id="derivedRange" class="text-gray-200 font-mono">$0.00</span>
+                        <span>M15 Volatility ATR:</span>
+                        <span id="m15ATRVal" class="text-gold font-mono font-bold">$0.00</span>
                     </div>
                 </div>
             </div>
@@ -308,14 +328,14 @@
                     <div class="flex justify-between items-center border-b border-cardborder pb-3 mb-4">
                         <h3 class="font-bold text-white text-base flex items-center gap-2">
                             <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-                            Analysis Rationale & Factors
+                            M15 Technical Rationale & Factors
                         </h3>
-                        <span class="text-xs text-gray-400">Weighted Matrix</span>
+                        <span class="text-xs text-gray-400">Scalp Checklist</span>
                     </div>
 
                     <div id="analysisFactorsList" class="space-y-3 text-xs">
                         <div class="p-3 rounded-xl bg-black/40 border border-cardborder text-gray-400">
-                            Loading factor checklist...
+                            Loading technical metrics...
                         </div>
                     </div>
                 </div>
@@ -324,16 +344,16 @@
                 <div class="p-3 bg-black/40 rounded-xl border border-cardborder flex items-center justify-between mt-4">
                     <div class="flex items-center gap-2 text-xs text-gray-400">
                         <svg class="w-4 h-4 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg>
-                        <span>API issue or custom price testing?</span>
+                        <span>Need custom price or manual testing?</span>
                     </div>
                     <button onclick="openManualPriceModal()" class="px-3 py-1 text-xs font-semibold rounded-lg bg-gold/20 text-gold border border-gold/40 hover:bg-gold/30 transition">
-                        Input Price Manually
+                        Gunakan Harga Manual
                     </button>
                 </div>
             </div>
         </div>
 
-        <!-- Bottom Row: News Intelligence Feed (Active in News Mode) -->
+        <!-- News Intelligence Feed (Active in Technical + News Mode) -->
         <div id="newsSection" class="bg-cardbg border border-cardborder rounded-2xl p-5 space-y-4">
             <div class="flex flex-wrap justify-between items-center gap-2 border-b border-cardborder pb-3">
                 <div class="flex items-center gap-2">
@@ -365,7 +385,7 @@
             <div class="flex justify-between items-center border-b border-cardborder pb-3">
                 <h3 class="text-lg font-bold text-white flex items-center gap-2">
                     <svg class="w-5 h-5 text-gold" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                    Manual Price Override
+                    Input Harga Spot Manual
                 </h3>
                 <button onclick="closeManualPriceModal()" class="text-gray-400 hover:text-white">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
@@ -373,28 +393,28 @@
             </div>
 
             <p class="text-xs text-gray-400">
-                Enter spot XAUUSD price and 24h change percentage manually if APIs are blocked or offline.
+                Masukkan harga spot XAUUSD dan perubahan 24 jam untuk pengujian analisa teknikal M15.
             </p>
 
             <form id="manualPriceForm" onsubmit="handleManualSubmit(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-semibold text-gray-300 mb-1">XAUUSD Spot Price ($)</label>
-                    <input type="number" step="0.01" min="500" max="10000" id="inputManualPrice" placeholder="e.g. 2900.50" required
+                    <input type="number" step="0.01" min="500" max="10000" id="inputManualPrice" placeholder="e.g. 2915.50" required
                         class="w-full bg-black/60 border border-cardborder rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-gold font-mono text-sm">
                 </div>
 
                 <div>
                     <label class="block text-xs font-semibold text-gray-300 mb-1">24h Change (%)</label>
-                    <input type="number" step="0.01" min="-20" max="20" id="inputManualChange" placeholder="e.g. +0.45 or -0.80" value="0.25" required
+                    <input type="number" step="0.01" min="-20" max="20" id="inputManualChange" placeholder="e.g. +0.35 or -0.50" value="0.30" required
                         class="w-full bg-black/60 border border-cardborder rounded-xl px-4 py-2.5 text-white focus:outline-none focus:border-gold font-mono text-sm">
                 </div>
 
                 <div class="pt-2 flex gap-3">
                     <button type="button" onclick="closeManualPriceModal()" class="w-1/2 py-2.5 rounded-xl border border-cardborder text-xs font-semibold text-gray-300 hover:bg-white/5 transition">
-                        Cancel
+                        Batal
                     </button>
                     <button type="submit" class="w-1/2 py-2.5 rounded-xl bg-gold text-black font-bold text-xs hover:bg-goldlight transition shadow-lg shadow-gold/20">
-                        Apply Custom Price
+                        Terapkan Harga
                     </button>
                 </div>
             </form>
@@ -402,9 +422,9 @@
     </div>
 
     <script>
-        /* State Variables */
         const state = {
-            mode: 'tech', // 'tech' or 'news'
+            timeframe: 'M15', // 'M15', 'H1', 'D1'
+            mode: 'tech',     // 'tech' or 'news'
             autoRefresh: true,
             refreshInterval: null,
             currentPrice: 0,
@@ -416,10 +436,9 @@
             isLoading: false
         };
 
-        /* API Endpoints and Fallback Hierarchy */
         const API_TIMEOUT_MS = 5000;
 
-        /* Keyword dictionaries for sentiment analysis */
+        /* Sentiment dictionaries */
         const BULLISH_KEYWORDS = [
             'cut', 'rate cut', 'dovish', 'fed cuts', 'inflation high', 'cpi rise',
             'weak dollar', 'dollar falls', 'war', 'conflict', 'geopolitical', 'uncertainty',
@@ -432,6 +451,7 @@
             'bearish', 'selloff', 'easing inflation', 'peace', 'de-escalation'
         ];
 
+        /* Helper for API timeout */
         async function fetchWithTimeout(resource, options = {}) {
             const controller = new AbortController();
             const id = setTimeout(() => controller.abort(), API_TIMEOUT_MS);
@@ -452,15 +472,14 @@
             if (state.isLoading) return;
             state.isLoading = true;
             showLoadingUI(true);
-            showNotification('info', 'Fetching latest market rates & technical indicators...');
+            showNotification('info', `Mengambil data harga XAUUSD terbaru (${state.timeframe})...`);
 
             let priceFetched = false;
 
             // Primary API: Gold-API
             try {
-                console.log('Fetching Primary Gold API...');
                 const res = await fetchWithTimeout('https://api.gold-api.com/price/XAU');
-                if (!res.ok) throw new Error('Primary API HTTP Error');
+                if (!res.ok) throw new Error('Primary API Error');
                 const data = await res.json();
                 if (data && (data.price || data.price_gram_24k)) {
                     state.currentPrice = parseFloat(data.price || data.price_gram_24k);
@@ -469,14 +488,14 @@
                     priceFetched = true;
                 }
             } catch (err) {
-                console.warn('Primary Gold API failed, attempting Fallback 1 (CoinGecko PAXG)...', err);
+                console.warn('Gold API failed, trying Fallback 1 (CoinGecko PAXG)...', err);
             }
 
-            // Fallback 1: CoinGecko PAXG Proxy
+            // Fallback 1: CoinGecko PAXG
             if (!priceFetched) {
                 try {
                     const res = await fetchWithTimeout('https://api.coingecko.com/api/v3/simple/price?ids=pax-gold&vs_currencies=usd&include_24hr_change=true');
-                    if (!res.ok) throw new Error('CoinGecko HTTP Error');
+                    if (!res.ok) throw new Error('CoinGecko Error');
                     const data = await res.json();
                     if (data && data['pax-gold']) {
                         state.currentPrice = parseFloat(data['pax-gold'].usd);
@@ -485,23 +504,22 @@
                         priceFetched = true;
                     }
                 } catch (err) {
-                    console.warn('Fallback 1 PAXG failed...', err);
+                    console.warn('Fallback PAXG failed...', err);
                 }
             }
 
-            // Fallback 2: Manual Input fallback warning if no price
+            // Fallback 2: Prompt Manual Input if zero
             if (!priceFetched && state.currentPrice === 0) {
-                showNotification('error', 'Automatic price fetch failed. Please enter manual price.');
+                showNotification('error', 'Gagal koneksi API. Silahkan masukkan harga manual.');
                 openManualPriceModal();
                 showLoadingUI(false);
                 state.isLoading = false;
                 return;
             } else if (!priceFetched && state.currentPrice > 0) {
-                // Kept previous manual / fetched price
-                state.sourceLabel = 'Manual / Cached Price';
+                state.sourceLabel = 'Harga Manual / Cached';
             }
 
-            // Fetch News if mode is 'news'
+            // Fetch News if Mode is 'news'
             if (state.mode === 'news') {
                 await fetchNewsData();
             }
@@ -509,7 +527,7 @@
             runAnalysis();
             showLoadingUI(false);
             state.isLoading = false;
-            showNotification('success', `Data updated successfully via ${state.sourceLabel}`);
+            showNotification('success', `Harga diperbarui via ${state.sourceLabel}`);
         }
 
         function runAnalysis() {
@@ -518,79 +536,92 @@
 
             if (!P || P <= 0) return;
 
-            // Derived High, Low, Close
-            // Close = Current Spot Price
-            // Estimate daily volatility range (~1.2% base + absolute change)
-            const volRangePct = Math.max(0.012, Math.abs(change / 100) + 0.006);
-            const rangeAmount = P * volRangePct;
+            // Timeframe specific multipliers
+            // M15 uses smaller range & tighter ATR for scalping
+            let tfRangePct, atrEst;
+            if (state.timeframe === 'M15') {
+                tfRangePct = Math.max(0.003, (Math.abs(change / 100) * 0.35) + 0.002); // ~0.2% - 0.4%
+                atrEst = Math.max(2.5, P * 0.0018); // ~ $3 - $6 for M15 gold
+            } else if (state.timeframe === 'H1') {
+                tfRangePct = Math.max(0.007, (Math.abs(change / 100) * 0.6) + 0.004);
+                atrEst = Math.max(5.0, P * 0.0035);
+            } else { // D1
+                tfRangePct = Math.max(0.014, Math.abs(change / 100) + 0.008);
+                atrEst = Math.max(12.0, P * 0.0075);
+            }
+
+            const rangeAmount = P * tfRangePct;
 
             let high, low;
             if (change >= 0) {
-                high = P + (rangeAmount * 0.3);
-                low = P - (rangeAmount * 0.7);
+                high = P + (rangeAmount * 0.4);
+                low = P - (rangeAmount * 0.6);
             } else {
-                high = P + (rangeAmount * 0.7);
-                low = P - (rangeAmount * 0.3);
+                high = P + (rangeAmount * 0.6);
+                low = P - (rangeAmount * 0.4);
             }
 
             const close = P;
 
-            // Classic Pivot Points
+            // Classic Pivot Points derivation
             const PP = (high + low + close) / 3;
             const R1 = (2 * PP) - low;
             const S1 = (2 * PP) - high;
             const R2 = PP + (high - low);
             const S2 = PP - (high - low);
 
-            // Technical Indicators & Scoring (-100 to +100)
+            // Technical Scoring Matrix (-100 to +100)
             let techScore = 0;
             const factors = [];
 
-            // Factor 1: 24h Momentum
-            if (change > 0.8) {
-                techScore += 30;
-                factors.push({ name: '24h Momentum', score: '+30', text: `Strong bullish momentum (+${change.toFixed(2)}%)` });
-            } else if (change > 0.1) {
-                techScore += 15;
-                factors.push({ name: '24h Momentum', score: '+15', text: `Moderate bullish drift (+${change.toFixed(2)}%)` });
-            } else if (change < -0.8) {
-                techScore -= 30;
-                factors.push({ name: '24h Momentum', score: '-30', text: `Strong bearish selloff (${change.toFixed(2)}%)` });
-            } else if (change < -0.1) {
-                techScore -= 15;
-                factors.push({ name: '24h Momentum', score: '-15', text: `Moderate bearish bias (${change.toFixed(2)}%)` });
+            // Factor 1: Timeframe Momentum
+            if (change > 0.6) {
+                techScore += 35;
+                factors.push({ name: `${state.timeframe} Momentum`, score: '+35', text: `Strong bullish momentum (+${change.toFixed(2)}%)` });
+            } else if (change > 0.05) {
+                techScore += 20;
+                factors.push({ name: `${state.timeframe} Momentum`, score: '+20', text: `Moderate bullish bias (+${change.toFixed(2)}%)` });
+            } else if (change < -0.6) {
+                techScore -= 35;
+                factors.push({ name: `${state.timeframe} Momentum`, score: '-35', text: `Strong bearish selloff (${change.toFixed(2)}%)` });
+            } else if (change < -0.05) {
+                techScore -= 20;
+                factors.push({ name: `${state.timeframe} Momentum`, score: '-20', text: `Moderate bearish bias (${change.toFixed(2)}%)` });
             } else {
-                factors.push({ name: '24h Momentum', score: '0', text: 'Flat / Sideways momentum' });
+                factors.push({ name: `${state.timeframe} Momentum`, score: '0', text: 'Consolidating / Neutral momentum' });
             }
 
-            // Factor 2: Position vs Pivot Point
+            // Factor 2: Position vs M15 Pivot Point
             if (P > R1) {
-                techScore += 25;
-                factors.push({ name: 'Pivot Position', score: '+25', text: 'Price trading above R1 Resistance level' });
+                techScore += 30;
+                factors.push({ name: 'Pivot Position', score: '+30', text: `Trading above ${state.timeframe} R1 Resistance ($${R1.toFixed(2)})` });
             } else if (P > PP) {
-                techScore += 15;
-                factors.push({ name: 'Pivot Position', score: '+15', text: 'Price trading above Central Pivot Point (PP)' });
+                techScore += 20;
+                factors.push({ name: 'Pivot Position', score: '+20', text: `Trading above Central Pivot PP ($${PP.toFixed(2)})` });
             } else if (P < S1) {
-                techScore -= 25;
-                factors.push({ name: 'Pivot Position', score: '-25', text: 'Price trading below S1 Support level' });
+                techScore -= 30;
+                factors.push({ name: 'Pivot Position', score: '-30', text: `Trading below ${state.timeframe} S1 Support ($${S1.toFixed(2)})` });
             } else {
-                techScore -= 15;
-                factors.push({ name: 'Pivot Position', score: '-15', text: 'Price trading below Central Pivot Point (PP)' });
+                techScore -= 20;
+                factors.push({ name: 'Pivot Position', score: '-20', text: `Trading below Central Pivot PP ($${PP.toFixed(2)})` });
             }
 
-            // Factor 3: Daily Range Location
-            const rangePctLocation = ((P - low) / (high - low)) * 100;
-            if (rangePctLocation > 70) {
+            // Factor 3: Scalp Range Location
+            const rangeLoc = ((P - low) / (high - low)) * 100;
+            if (rangeLoc > 70) {
                 techScore += 15;
-                factors.push({ name: 'Range Location', score: '+15', text: `Upper 30% of daily range (${rangePctLocation.toFixed(0)}%)` });
-            } else if (rangePctLocation < 30) {
+                factors.push({ name: 'Range Location', score: '+15', text: `Upper 30% of ${state.timeframe} range (${rangeLoc.toFixed(0)}%)` });
+            } else if (rangeLoc < 30) {
                 techScore -= 15;
-                factors.push({ name: 'Range Location', score: '-15', text: `Lower 30% of daily range (${rangePctLocation.toFixed(0)}%)` });
+                factors.push({ name: 'Range Location', score: '-15', text: `Lower 30% of ${state.timeframe} range (${rangeLoc.toFixed(0)}%)` });
             } else {
-                factors.push({ name: 'Range Location', score: '0', text: `Mid-range price consolidation (${rangePctLocation.toFixed(0)}%)` });
+                factors.push({ name: 'Range Location', score: '0', text: `Mid-range consolidation (${rangeLoc.toFixed(0)}%)` });
             }
 
-            // Final Composite Score calculation (60% Tech + 40% News if news mode active)
+            // Factor 4: M15 ATR Volatility Assessment
+            factors.push({ name: `${state.timeframe} Volatility ATR`, score: 'OK', text: `Current volatility ATR distance: $${atrEst.toFixed(2)}` });
+
+            // Final Composite Score calculation
             let finalScore = techScore;
             if (state.mode === 'news') {
                 finalScore = (techScore * 0.6) + (state.newsScore * 0.4);
@@ -601,71 +632,65 @@
                 });
             }
 
-            // Signal Determination
+            // Signal Classification
             let signal = 'NEUTRAL';
-            let signalColor = 'text-gray-300';
-            let signalBg = 'bg-gray-800';
-            let borderClass = 'border-cardborder';
-
-            if (finalScore >= 45) {
-                signal = 'STRONG BUY';
-                signalColor = 'text-emerald-400';
-                borderClass = 'border-emerald-500/50 glow-green';
-            } else if (finalScore >= 15) {
-                signal = 'WEAK BUY';
-                signalColor = 'text-emerald-300';
-                borderClass = 'border-emerald-500/30';
-            } else if (finalScore <= -45) {
-                signal = 'STRONG SELL';
-                signalColor = 'text-red-400';
-                borderClass = 'border-red-500/50 glow-red';
-            } else if (finalScore <= -15) {
-                signal = 'WEAK SELL';
-                signalColor = 'text-red-300';
-                borderClass = 'border-red-500/30';
-            }
+            if (finalScore >= 40) signal = 'STRONG BUY';
+            else if (finalScore >= 12) signal = 'WEAK BUY';
+            else if (finalScore <= -40) signal = 'STRONG SELL';
+            else if (finalScore <= -12) signal = 'WEAK SELL';
 
             // Confidence Level Calculation
-            const absScore = Math.abs(finalScore);
-            const confidence = Math.min(95, Math.max(55, Math.round(55 + (absScore * 0.4))));
+            const confidence = Math.min(95, Math.max(55, Math.round(55 + (Math.abs(finalScore) * 0.4))));
 
-            // Trade Plan Setup (Entry, SL, TP, RRR)
-            const atrEst = P * 0.0075; // Approx 0.75% ATR approximation for gold
-            let entry, sl, tp1, tp2;
+            // STRICT 1:2 RISK TO REWARD (SL/TP) TRADE SETUP CALCULATION
+            let entry, sl, tp, actionTag;
+            const riskDistance = atrEst; // 1x ATR risk
+            const rewardDistance = atrEst * 2.0; // STRICT 2.0x ATR reward
 
             if (signal.includes('BUY')) {
-                entry = Math.min(P, PP + 1.0); // Buy near current or PP
-                sl = Math.min(S2, entry - (atrEst * 1.5));
-                tp1 = Math.max(R1, entry + (atrEst * 1.5));
-                tp2 = Math.max(R2, entry + (atrEst * 2.8));
+                actionTag = 'BUY LIMIT / SPOT';
+                // Optimal Entry at Support or current spot price if momentum is high
+                entry = (P <= PP) ? P : Math.max(S1, P - (atrEst * 0.3)); 
+                sl = entry - riskDistance;
+                tp = entry + rewardDistance;
             } else if (signal.includes('SELL')) {
-                entry = Math.max(P, PP - 1.0); // Sell near current or PP
-                sl = Math.max(R2, entry + (atrEst * 1.5));
-                tp1 = Math.min(S1, entry - (atrEst * 1.5));
-                tp2 = Math.min(S2, entry - (atrEst * 2.8));
+                actionTag = 'SELL LIMIT / SPOT';
+                // Optimal Entry at Resistance or current spot price
+                entry = (P >= PP) ? P : Math.min(R1, P + (atrEst * 0.3));
+                sl = entry + riskDistance;
+                tp = entry - rewardDistance;
             } else {
+                actionTag = 'WAIT / NEUTRAL';
                 entry = P;
-                sl = P - (atrEst * 1.2);
-                tp1 = P + (atrEst * 1.2);
-                tp2 = P + (atrEst * 2.2);
+                sl = P - riskDistance;
+                tp = P + rewardDistance;
             }
 
-            const risk = Math.abs(entry - sl);
-            const reward = Math.abs(tp1 - entry);
-            const rrrVal = risk > 0 ? (reward / risk) : 1;
+            const riskUSD = Math.abs(entry - sl);
+            const rewardUSD = Math.abs(tp - entry);
+            const actualRRR = riskUSD > 0 ? (rewardUSD / riskUSD) : 2.0;
 
             state.analysisResult = {
                 price: P,
                 change,
                 high,
                 low,
+                atrEst,
                 PP, R1, R2, S1, S2,
                 techScore,
                 finalScore,
                 confidence,
                 signal,
                 factors,
-                tradePlan: { entry, sl, tp1, tp2, rrr: rrrVal }
+                tradePlan: {
+                    actionTag,
+                    entry,
+                    sl,
+                    tp,
+                    riskUSD,
+                    rewardUSD,
+                    rrr: actualRRR
+                }
             };
 
             renderUI();
@@ -675,7 +700,7 @@
             try {
                 const rssUrl = encodeURIComponent('https://news.google.com/rss/search?q=gold+xauusd+fed+inflation&hl=en-US&gl=US&ceid=US:en');
                 const res = await fetchWithTimeout(`https://api.rss2json.com/v1/api.json?rss_url=${rssUrl}`);
-                if (!res.ok) throw new Error('RSS conversion failed');
+                if (!res.ok) throw new Error('RSS convert failed');
                 const data = await res.json();
 
                 if (data && data.items && data.items.length > 0) {
@@ -684,10 +709,10 @@
                     document.getElementById('newsStatusBadge').textContent = 'RSS FEED ACTIVE';
                     document.getElementById('newsStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-semibold border border-purple-500/30';
                 } else {
-                    throw new Error('No items in news feed');
+                    throw new Error('Empty news feed');
                 }
             } catch (err) {
-                console.warn('News RSS fetch failed:', err);
+                console.warn('News fetch error:', err);
                 document.getElementById('newsStatusBadge').textContent = 'NEWS FEED UNAVAILABLE';
                 document.getElementById('newsStatusBadge').className = 'text-[10px] px-2 py-0.5 rounded bg-amber-500/20 text-amber-300 font-semibold border border-amber-500/30';
                 state.newsArticles = [];
@@ -713,7 +738,6 @@
                 score += itemScore;
             });
 
-            // Clamp sentiment score between -100 and +100
             state.newsScore = Math.max(-100, Math.min(100, score));
         }
 
@@ -721,7 +745,7 @@
             const res = state.analysisResult;
             if (!res) return;
 
-            // Header & Source
+            // Live Price
             document.getElementById('livePrice').textContent = `$${res.price.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
             
             const changeElem = document.getElementById('priceChange24h');
@@ -731,20 +755,21 @@
 
             document.getElementById('sourceBadge').textContent = state.sourceLabel;
 
-            // Daily Bias
+            // Trend Bias
             const biasElem = document.getElementById('dailyBias');
-            if (res.change > 0.2) {
+            if (res.change > 0.15) {
                 biasElem.innerHTML = `<span class="text-emerald-400">BULLISH 🟢</span>`;
-            } else if (res.change < -0.2) {
+            } else if (res.change < -0.15) {
                 biasElem.innerHTML = `<span class="text-red-400">BEARISH 🔴</span>`;
             } else {
                 biasElem.innerHTML = `<span class="text-amber-400">SIDEWAYS 🟡</span>`;
             }
 
-            // Active Mode Badge
-            document.getElementById('activeModeBadge').textContent = state.mode === 'tech' ? 'TECHNICAL ONLY' : 'TECHNICAL + NEWS (60/40)';
+            // Mode & Timeframe Badges
+            document.getElementById('activeModeBadge').textContent = state.mode === 'tech' ? `TECHNICAL ONLY (${state.timeframe})` : `TECHNICAL (${state.timeframe}) + NEWS (60/40)`;
+            document.getElementById('tfBadgeCard').textContent = `${state.timeframe} Horizon ATR`;
 
-            // Signal Main Banner
+            // Signal Main Callout
             const sigElem = document.getElementById('signalMain');
             sigElem.textContent = res.signal;
             
@@ -766,25 +791,32 @@
             document.getElementById('confidencePill').classList.remove('hidden');
             document.getElementById('confidenceVal').textContent = `${res.confidence}%`;
 
-            // Score gauge & description
+            // Score Circle Gauge
             document.getElementById('scoreVal').textContent = Math.round(res.finalScore);
             const circle = document.getElementById('scoreCircle');
             const dashVal = Math.min(100, Math.max(0, (res.finalScore + 100) / 2));
             circle.setAttribute('stroke-dasharray', `${dashVal}, 100`);
 
             document.getElementById('signalSummaryText').textContent = 
-                `Composite evaluation indicates a ${res.signal} posture for XAUUSD with ${res.confidence}% algorithm confidence based on ${res.factors.length} active market metrics.`;
+                `Evaluasi timeframe ${state.timeframe} menghasilkan sinyal ${res.signal} dengan tingkat keyakinan ${res.confidence}% dan rasio SL/TP presisi 1:2.0.`;
 
-            // Trade Plan Card Updates
+            // STRICT 1:2 TRADE PLAN CARDS UPDATE
             const tp = res.tradePlan;
+            document.getElementById('actionTypeTag').textContent = tp.actionTag;
             document.getElementById('tradeEntry').textContent = `$${tp.entry.toFixed(2)}`;
-            document.getElementById('tradeSL').textContent = `$${tp.sl.toFixed(2)}`;
-            document.getElementById('tradeTP').textContent = `$${tp.tp1.toFixed(2)}`;
-            document.getElementById('tpNote').textContent = `TP1: $${tp.tp1.toFixed(2)} | TP2: $${tp.tp2.toFixed(2)}`;
-            document.getElementById('tradeRRR').textContent = `1 : ${tp.rrr.toFixed(2)}`;
-            document.getElementById('rrrQuality').textContent = tp.rrr >= 2.0 ? 'Quality: Excellent (>1:2)' : (tp.rrr >= 1.4 ? 'Quality: Moderate' : 'Quality: Scalp / Conservative');
+            document.getElementById('entryNote').textContent = `Harga entri ideal (${state.timeframe}).`;
 
-            // Pivot Points Table
+            document.getElementById('tradeSL').textContent = `$${tp.sl.toFixed(2)}`;
+            document.getElementById('slNote').textContent = `Jarak Risiko: $${tp.riskUSD.toFixed(2)} (1.0x ATR)`;
+
+            document.getElementById('tradeTP').textContent = `$${tp.tp.toFixed(2)}`;
+            document.getElementById('tpNote').textContent = `Jarak Target: $${tp.rewardUSD.toFixed(2)} (2.0x Risk)`;
+
+            document.getElementById('tradeRRR').textContent = `1 : 2.0`;
+            document.getElementById('rrrQuality').textContent = `Risk: $${tp.riskUSD.toFixed(2)} | Profit: $${tp.rewardUSD.toFixed(2)}`;
+
+            // Pivot Table
+            document.getElementById('pivotTfText').textContent = state.timeframe;
             document.getElementById('pivotR2').textContent = `$${res.R2.toFixed(2)}`;
             document.getElementById('pivotR1').textContent = `$${res.R1.toFixed(2)}`;
             document.getElementById('pivotPP').textContent = `$${res.PP.toFixed(2)}`;
@@ -799,14 +831,19 @@
 
             document.getElementById('derivedHigh').textContent = `$${res.high.toFixed(2)}`;
             document.getElementById('derivedLow').textContent = `$${res.low.toFixed(2)}`;
-            document.getElementById('derivedRange').textContent = `$${(res.high - res.low).toFixed(2)}`;
+            document.getElementById('m15ATRVal').textContent = `$${res.atrEst.toFixed(2)}`;
 
-            // Render Factors Checklist
+            // Factors List Render
             const factorsContainer = document.getElementById('analysisFactorsList');
             factorsContainer.innerHTML = '';
             res.factors.forEach(f => {
                 const scoreNum = parseFloat(f.score);
-                const badgeColor = scoreNum > 0 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : (scoreNum < 0 ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-gray-800 text-gray-400 border-gray-700');
+                let badgeColor = 'bg-gray-800 text-gray-400 border-gray-700';
+                if (!isNaN(scoreNum)) {
+                    badgeColor = scoreNum > 0 ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : (scoreNum < 0 ? 'bg-red-500/20 text-red-300 border-red-500/30' : 'bg-gray-800 text-gray-400 border-gray-700');
+                } else {
+                    badgeColor = 'bg-blue-500/20 text-blue-300 border-blue-500/30';
+                }
                 
                 const div = document.createElement('div');
                 div.className = 'p-3 rounded-xl bg-black/40 border border-cardborder flex items-center justify-between gap-3';
@@ -820,7 +857,6 @@
                 factorsContainer.appendChild(div);
             });
 
-            // Render News Container if in news mode
             renderNewsUI();
         }
 
@@ -840,7 +876,7 @@
             if (state.newsArticles.length === 0) {
                 newsContainer.innerHTML = `
                     <div class="p-4 rounded-xl bg-black/40 border border-cardborder text-xs text-gray-400 text-center col-span-3">
-                        No recent news feed items found or RSS request timed out. Fallback to Technical analysis active.
+                        Tidak ada berita terbaru / RSS timeout. Kembali ke analisa teknikal.
                     </div>`;
                 return;
             }
@@ -862,12 +898,26 @@
                         </a>
                     </div>
                     <div class="text-[10px] text-gray-500 flex justify-between items-center pt-2 border-t border-cardborder/40">
-                        <span>Source: Macro RSS</span>
-                        <span class="text-purple-400">Impact Score: ${item.score > 0 ? '+'+item.score : item.score}</span>
+                        <span>Macro Feed</span>
+                        <span class="text-purple-400">Score: ${item.score > 0 ? '+'+item.score : item.score}</span>
                     </div>
                 `;
                 newsContainer.appendChild(card);
             });
+        }
+
+        function setTimeframe(tf) {
+            state.timeframe = tf;
+            ['M15', 'H1', 'D1'].forEach(t => {
+                const btn = document.getElementById(`tf${t}`);
+                if (t === tf) {
+                    btn.className = 'px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-black bg-gold shadow-sm';
+                } else {
+                    btn.className = 'px-2.5 py-1 text-xs font-bold rounded-lg transition-all text-gray-400 hover:text-white';
+                }
+            });
+            runAnalysis();
+            showNotification('info', `Timeframe diubah ke ${tf}`);
         }
 
         function setAnalysisMode(mode) {
@@ -911,7 +961,7 @@
             }, 30000);
         }
 
-        /* Manual Price Modal Helpers */
+        /* Modal Helpers */
         function openManualPriceModal() {
             document.getElementById('manualPriceModal').classList.remove('hidden');
             if (state.currentPrice > 0) {
@@ -932,14 +982,14 @@
             if (!isNaN(p) && p > 0) {
                 state.currentPrice = p;
                 state.change24h = isNaN(c) ? 0 : c;
-                state.sourceLabel = 'Manual User Override';
+                state.sourceLabel = 'Harga Manual User';
                 closeManualPriceModal();
                 runAnalysis();
-                showNotification('success', 'Manual price parameters applied.');
+                showNotification('success', 'Harga manual diterapkan.');
             }
         }
 
-        /* UI Feedback Helpers */
+        /* Notification & Loader Helpers */
         function showLoadingUI(loading) {
             const icon = document.getElementById('refreshIcon');
             if (loading) {
@@ -974,6 +1024,7 @@
             document.getElementById('statusNotification').classList.add('hidden');
         }
 
+        /* Initialization */
         document.addEventListener('DOMContentLoaded', () => {
             fetchMarketData();
             startAutoRefreshLoop();
